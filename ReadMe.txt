@@ -1,1 +1,0 @@
-Project started in spring 2008

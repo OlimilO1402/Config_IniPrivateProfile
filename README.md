@@ -1,2 +1,4 @@
-# Config_IniPrivateProfile
- Read and write config files in ini format with PrivateProfile-api
+# Config_IniPrivateProfile  
+## Read and write config files in ini format with PrivateProfile-api  
+Project started in spring 2008
+
