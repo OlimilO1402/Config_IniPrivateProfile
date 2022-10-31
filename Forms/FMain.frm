@@ -95,6 +95,8 @@ Begin VB.Form FMain
       Height          =   4455
       Left            =   0
       MultiLine       =   -1  'True
+      OLEDragMode     =   1  'Automatisch
+      OLEDropMode     =   1  'Manuell
       ScrollBars      =   3  'Beides
       TabIndex        =   10
       Top             =   1320
@@ -121,6 +123,14 @@ Private IniFile As ConfigIniDocument
 
 Private Sub Form_Load()
     Me.Caption = Me.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
+End Sub
+
+Private Sub Form_Resize()
+    Dim L As Single
+    Dim T As Single: T = Text1.Top
+    Dim W As Single: W = Me.ScaleWidth
+    Dim H As Single: H = Me.ScaleHeight - T
+    If W > 0 And H > 0 Then Text1.Move L, T, W, H
 End Sub
 
 Private Sub UpdateView()
@@ -339,7 +349,7 @@ Private Sub BtnTestVBP_Click()
     
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\PConfigIni.vbp"))
     If Not IniFile.pfn.Exists Then
-        MsgBox "File not found, write it first:" & vbCrLf & IniFile.pfn.Value
+        MsgBox "File not found:" & vbCrLf & IniFile.pfn.Value
         Exit Sub
     End If
     IniFile.Load
@@ -375,10 +385,13 @@ Private Sub BtnTestVBP_Click()
 
 End Sub
 
-Private Sub Form_Resize()
-    Dim L As Single
-    Dim T As Single: T = Text1.Top
-    Dim W As Single: W = Me.ScaleWidth
-    Dim H As Single: H = Me.ScaleHeight - T
-    If W > 0 And H > 0 Then Text1.Move L, T, W, H
+Private Sub Text1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If Not Data.GetFormat(ClipBoardConstants.vbCFFiles) Then Exit Sub
+    Dim pfn As PathFileName
+    If Data.Files.Count = 0 Then Exit Sub
+    Set pfn = MNew.PathFileName(Data.Files.Item(1))
+    If Not pfn.Exists Then Exit Sub
+    Set IniFile = MNew.ConfigIniDocument(pfn)
+    IniFile.Load
+    Text1.Text = IniFile.ToStr
 End Sub

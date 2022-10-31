@@ -169,16 +169,17 @@ End Function
 
 '##############################'  ToStr  '##############################'
 Public Function NameToStr() As String
-    NameToStr = "[" & m_Name & "]"
+    If Len(m_Name) Then NameToStr = "[" & m_Name & "]" '& vbCrLf
 End Function
 
 Public Function ToStr() As String
     Dim s As String: s = Me.NameToStr
+    If Len(s) Then s = s & vbCrLf
     Dim keyvalue As ConfigIniKeyValue
     Dim i As Long
     For i = 0 To m_KeyValues.Count - 1
         Set keyvalue = m_KeyValues.Item(i)
-        s = s & vbCrLf & keyvalue.ToStr
+        s = s & keyvalue.ToStr & vbCrLf
     Next
     ToStr = s
 End Function

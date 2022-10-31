@@ -491,12 +491,17 @@ End Sub
 
 '##############################'  ToStr  '##############################'
 Public Function ToStr() As String
+    Dim s As String
+    If Not m_Root Is Nothing Then
+        s = m_Root.ToStr & vbCrLf
+    End If
     Dim Section As ConfigIniSection
     Dim i As Long, u As Long: u = m_Sections.Count - 1
     For i = 0 To u
         Set Section = m_Sections.Item(i)
-        ToStr = ToStr & Section.ToStr & vbCrLf
+        s = s & Section.ToStr & vbCrLf
     Next
+    ToStr = s
 End Function
   
 '##############################'  Privates  '##############################'
