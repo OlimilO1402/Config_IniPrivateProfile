@@ -11,5 +11,6 @@ It supports Ansi, Unicode, VBC / VB6 / VBA, VBA6, VBA7 x86 and x64.
 For Unicode the file has to start either with a bom, or the first sectionname has to be in Unicode.  
 Use the class ConfigIniDocument to read and write ini-files immediately.  
 Or you load your settings from the ini file to ConfigIniDocument- ConfigIniSection- and ConfigIniKeyValue-objects, write your configuration values in memory and save it to disk later.  
+The class ConfigIniDocument also supports a first nameless root-section, like we have in visual basic 6 project-files (*.vbp).
 
 ![ConfigIni Image](Resources/ConfigIni.png "ConfigIni Image")
