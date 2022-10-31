@@ -1,6 +1,11 @@
 # Config_IniPrivateProfile  
 ## Read and write config files in ini format with PrivateProfile-api  
 
+[![GitHub](https://img.shields.io/github/license/OlimilO1402/Config_IniPrivateProfile?style=plastic)](https://github.com/OlimilO1402/Config_IniPrivateProfile/blob/master/LICENSE) 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/OlimilO1402/Config_IniPrivateProfile?style=plastic)](https://github.com/OlimilO1402/Config_IniPrivateProfile/releases/latest) 
+[![Github All Releases](https://img.shields.io/github/downloads/OlimilO1402/Config_IniPrivateProfile/total.svg)](https://github.com/OlimilO1402/Config_IniPrivateProfile/releases/download/v1.11.22/ConfigIni_v1.11.22.zip) 
+[![Follow](https://img.shields.io/github/followers/OlimilO1402.svg?style=social&label=Follow&maxAge=2592000)](https://github.com/OlimilO1402/Config_IniPrivateProfile/watchers) 
+
 Project started in spring 2008  
 These are 3 classes for writing and reading configuration files in the old ini-fileformat.  
 * ConfigIniDocument 
