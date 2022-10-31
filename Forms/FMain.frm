@@ -14,7 +14,7 @@ Begin VB.Form FMain
       Caption         =   "Test VBP"
       Height          =   375
       Left            =   8160
-      TabIndex        =   6
+      TabIndex        =   8
       Top             =   480
       Width           =   1575
    End
@@ -30,7 +30,7 @@ Begin VB.Form FMain
       Caption         =   "ReadRawIniData"
       Height          =   375
       Left            =   6600
-      TabIndex        =   8
+      TabIndex        =   6
       Top             =   480
       Width           =   1575
    End
@@ -38,7 +38,7 @@ Begin VB.Form FMain
       Caption         =   "Read and set PosAndSize of window"
       Height          =   375
       Left            =   3480
-      TabIndex        =   2
+      TabIndex        =   5
       Top             =   840
       Width           =   3135
    End
@@ -46,7 +46,7 @@ Begin VB.Form FMain
       Caption         =   "Write PosAndSize of window"
       Height          =   375
       Left            =   3480
-      TabIndex        =   5
+      TabIndex        =   4
       Top             =   480
       Width           =   3135
    End
@@ -54,7 +54,7 @@ Begin VB.Form FMain
       Caption         =   "Read Ini-file"
       Height          =   375
       Left            =   1920
-      TabIndex        =   1
+      TabIndex        =   3
       Top             =   840
       Width           =   1575
    End
@@ -62,7 +62,7 @@ Begin VB.Form FMain
       Caption         =   "Write Ini-file"
       Height          =   375
       Left            =   1920
-      TabIndex        =   0
+      TabIndex        =   2
       Top             =   480
       Width           =   1575
    End
@@ -70,7 +70,7 @@ Begin VB.Form FMain
       Caption         =   "Test ReadeAtOnce"
       Height          =   375
       Left            =   120
-      TabIndex        =   10
+      TabIndex        =   1
       Top             =   840
       Width           =   1815
    End
@@ -78,7 +78,7 @@ Begin VB.Form FMain
       Caption         =   "Test WriteAtOnce"
       Height          =   375
       Left            =   120
-      TabIndex        =   9
+      TabIndex        =   0
       Top             =   480
       Width           =   1815
    End
@@ -96,17 +96,18 @@ Begin VB.Form FMain
       Left            =   0
       MultiLine       =   -1  'True
       ScrollBars      =   3  'Beides
-      TabIndex        =   4
+      TabIndex        =   10
       Top             =   1320
       Width           =   9735
    End
    Begin VB.Label Label1 
-      Caption         =   "Label1"
-      Height          =   255
+      AutoSize        =   -1  'True
+      Caption         =   "        "
+      Height          =   195
       Left            =   120
-      TabIndex        =   3
+      TabIndex        =   9
       Top             =   120
-      Width           =   6375
+      Width           =   360
    End
 End
 Attribute VB_Name = "FMain"
@@ -151,6 +152,10 @@ End Sub
 Private Sub BtnTestReadAtOnce_Click()
     
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\mynewini.ini"))
+    If Not IniFile.pfn.Exists Then
+        MsgBox "File not found!" & vbCrLf & IniFile.pfn.Value
+        Exit Sub
+    End If
     Dim p As PosSizeF, rv As Long, txt As String
     Dim SectionName As String, KeyValueName As String
     SectionName = "SectionOne"
@@ -181,6 +186,78 @@ Private Sub BtnTestReadAtOnce_Click()
     
 End Sub
 
+Private Sub BtnWriteIniFile_Click()
+    
+    'directly write some values to the Ini-file
+    'by using the functions ValueStr, ValueBol & ValueInt you can
+    'immediately write to the Ini-file
+    'these function you will find in the class ConfigIniDocument
+    'as well as in the class ConfigIniKeyValue
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
+'    If Not IniFile.pfn.Exists Then
+'        MsgBox "File not found, write it first!" & vbCrLf & IniFile.pfn.Value
+'        Exit Sub
+'    End If
+    
+    Dim SectionName  As String
+    Dim KeyValueName As String
+    Dim Value        As String
+    Dim Section  As ConfigIniSection
+    Dim keyvalue As ConfigIniKeyValue
+    
+    SectionName = "TestReadWriteAtOnce"
+    KeyValueName = "FirstEntry"
+    
+    IniFile.ValueStr(SectionName, KeyValueName, "") = "NewValueOfFirstEntry"
+    
+    'read from ini file what we have written:
+    Value = IniFile.ValueStr(SectionName, KeyValueName, "")
+    MsgBox "The read value is: " & Value
+    
+    SectionName = "TestSection1"
+    Set Section = IniFile.AddSection(SectionName)
+    
+    KeyValueName = "FirstEntry"
+    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    keyvalue.ValueInt = 123456
+    
+    KeyValueName = "SecondEntry"
+    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    keyvalue.ValueInt = 456789
+    
+    'it's also possible to write UD-Type-variables at once:
+    KeyValueName = "Form1PositionAndSize"
+    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    
+    Dim cs As PosSizeF: cs = MNew.PosSizeF(Me)
+    Dim rv As Long
+    keyvalue.ValueStructP(LenB(cs), VarPtr(cs)) = VarPtr(cs)
+    
+    Dim tt As TestTyp1
+    With tt
+        .BolVal = True
+        .IntVal = 12345
+        .LngVal = 123456789
+        .SngVal = 0.123456
+        .DblVal = 0.123456789
+        .StrVal = "Test Entry"
+    End With
+    
+    KeyValueName = "tt_As_TestTyp"
+    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    
+    keyvalue.ValueStructP(LenB(tt), VarPtr(tt)) = VarPtr(tt)
+    
+    'write a value yourself
+    KeyValueName = "MyEntry"
+    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    Value = InputBox("Write a value yourself: ", "Me too", "hoho")
+    If Not (Len(Value) = 0) Then
+        keyvalue.ValueStr = Value
+    End If
+    UpdateView
+End Sub
+
 Private Sub BtnReadIniFile_Click()
     'read Ini-file and display it
     'Dim IniFile As ConfigIniDocument:
@@ -199,92 +276,13 @@ Private Sub BtnReadIniFile_Click()
     UpdateView
 End Sub
 
-Private Sub BtnWriteIniFile_Click()
-    
-    'directly write some values to the Ini-file
-    'by using the functions ValueStr, ValueBol & ValueInt you can
-    'immediately write to the Ini-file
-    'these function you will find in the class ConfigIniDocument
-    'as well as in the class ConfigIniKeyValue
-    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
-    Dim SectionName  As String
-    Dim KeyValueName As String
-    Dim Value        As String
-    Dim Section  As ConfigIniSection
-    Dim KeyValue As ConfigIniKeyValue
-    
-    SectionName = "TestReadWriteAtOnce"
-    KeyValueName = "FirstEntry"
-    
-    IniFile.ValueStr(SectionName, KeyValueName, "") = "NewValueOfFirstEntry"
-    
-    'read from ini file what we have written:
-    Value = IniFile.ValueStr(SectionName, KeyValueName, "")
-    MsgBox "The read value is: " & Value
-    
-    SectionName = "TestSection1"
-    Set Section = IniFile.AddSection(SectionName)
-    
-    KeyValueName = "FirstEntry"
-    Set KeyValue = Section.AddKeyValue(KeyValueName)
-    KeyValue.ValueInt = 123456
-    
-    KeyValueName = "SecondEntry"
-    Set KeyValue = Section.AddKeyValue(KeyValueName)
-    KeyValue.ValueInt = 456789
-    
-    'it's also possible to write UD-Type-variables at once:
-    KeyValueName = "Form1PositionAndSize"
-    Set KeyValue = Section.AddKeyValue(KeyValueName)
-    
-    Dim cs As PosSizeF: cs = MNew.PosSizeF(Me)
-    Dim rv As Long
-    KeyValue.ValueStructP(LenB(cs), VarPtr(cs)) = VarPtr(cs)
-    
-    Dim tt As TestTyp1
-    With tt
-        .BolVal = True
-        .IntVal = 12345
-        .LngVal = 123456789
-        .SngVal = 0.123456
-        .DblVal = 0.123456789
-        .StrVal = "Test Entry"
-    End With
-    
-    KeyValueName = "tt_As_TestTyp"
-    Set KeyValue = Section.AddKeyValue(KeyValueName)
-    
-    KeyValue.ValueStructP(LenB(tt), VarPtr(tt)) = VarPtr(tt)
-    
-    'write a value yourself
-    KeyValueName = "MyEntry"
-    Set KeyValue = Section.AddKeyValue(KeyValueName)
-    Value = InputBox("Write a value yourself: ", "Me too", "hoho")
-    If Not (Len(Value) = 0) Then
-        KeyValue.ValueStr = Value
-    End If
-    UpdateView
-End Sub
-
-Private Sub BtnReadRawIniData_Click()
-    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
-    If Not IniFile.pfn.Exists Then
-        MsgBox "File does not exist, write inifile first!"
-        Exit Sub
-    End If
-    UpdateView
-End Sub
-
-Private Sub BtnDeleteIniFile_Click()
-    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
-Try: On Error GoTo Catch
-    IniFile.pfn.Delete
-Catch:
-End Sub
-
 Private Sub BtnWriteWindowPosSize_Click()
     
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini")): IniFile.Load
+    If Not IniFile.pfn.Exists Then
+        MsgBox "File not found, write it first!" & vbCrLf & IniFile.pfn.Value
+        Exit Sub
+    End If
     Dim Section As ConfigIniSection:  Set Section = IniFile.Section("TestSection1")
     
     Dim Key As String: Key = "Form1PositionAndSize"
@@ -297,15 +295,20 @@ End Sub
 
 Private Sub BtnSetWindowPosSize_Click()
     
-    'Dim IniFile As ConfigIniDocument: Set IniFile = MNew.ConfigIniDocument(IniFileName): IniFile.Load
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini")): IniFile.Load
+    If Not IniFile.pfn.Exists Then
+        MsgBox "File not found, write it first!" & vbCrLf & IniFile.pfn.Value
+        Exit Sub
+    End If
+    
     Dim Section As ConfigIniSection:  Set Section = IniFile.Section("TestSection1")
     
     Dim KeyName  As String: KeyName = "Form1PositionAndSize"
-    Dim KeyValue As ConfigIniKeyValue: Set KeyValue = Section.AddKeyValue(KeyName)
+    Dim keyvalue As ConfigIniKeyValue: Set keyvalue = Section.AddKeyValue(KeyName)
     
     Dim cs As PosSizeF
     
-    Dim rv As Long: rv = KeyValue.ValueStructP(LenB(cs), VarPtr(cs))
+    Dim rv As Long: rv = keyvalue.ValueStructP(LenB(cs), VarPtr(cs))
     
     With cs
         Me.WindowState = FormWindowStateConstants.vbNormal
@@ -313,11 +316,30 @@ Private Sub BtnSetWindowPosSize_Click()
     End With
 End Sub
 
+Private Sub BtnReadRawIniData_Click()
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
+    If Not IniFile.pfn.Exists Then
+        MsgBox "File not found, write it first!" & vbCrLf & IniFile.pfn.Value
+        Exit Sub
+    End If
+    UpdateView
+End Sub
+
+Private Sub BtnDeleteIniFile_Click()
+    If Not IniFile.pfn.Exists Then
+        MsgBox "File not found, nothing to delete here" & vbCrLf & IniFile.pfn.Value
+        Exit Sub
+    End If
+Try: On Error GoTo Catch
+    IniFile.pfn.Delete
+Catch:
+End Sub
+
 Private Sub BtnTestVBP_Click()
     
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\PConfigIni.vbp"))
     If Not IniFile.pfn.Exists Then
-        MsgBox "File does not exist, write inifile first:" & vbCrLf & IniFile.pfn.Value
+        MsgBox "File not found, write it first:" & vbCrLf & IniFile.pfn.Value
         Exit Sub
     End If
     IniFile.Load
