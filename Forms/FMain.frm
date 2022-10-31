@@ -5,15 +5,39 @@ Begin VB.Form FMain
    ClientLeft      =   60
    ClientTop       =   450
    ClientWidth     =   9855
-   Icon            =   "Form1.frx":0000
+   Icon            =   "FMain.frx":0000
    LinkTopic       =   "Form1"
    ScaleHeight     =   5895
    ScaleWidth      =   9855
    StartUpPosition =   3  'Windows-Standard
+   Begin VB.CommandButton BtnTestVBP 
+      Caption         =   "Test VBP"
+      Height          =   375
+      Left            =   8160
+      TabIndex        =   6
+      Top             =   480
+      Width           =   1575
+   End
+   Begin VB.CommandButton BtnDeleteIniFile 
+      Caption         =   "Delete Ini-file"
+      Height          =   375
+      Left            =   6600
+      TabIndex        =   7
+      Top             =   840
+      Width           =   1575
+   End
+   Begin VB.CommandButton BtnReadRawIniData 
+      Caption         =   "ReadRawIniData"
+      Height          =   375
+      Left            =   6600
+      TabIndex        =   8
+      Top             =   480
+      Width           =   1575
+   End
    Begin VB.CommandButton BtnSetWindowPosSize 
       Caption         =   "Read and set PosAndSize of window"
       Height          =   375
-      Left            =   6600
+      Left            =   3480
       TabIndex        =   2
       Top             =   840
       Width           =   3135
@@ -23,7 +47,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   3480
       TabIndex        =   5
-      Top             =   840
+      Top             =   480
       Width           =   3135
    End
    Begin VB.CommandButton BtnReadIniFile 
@@ -34,46 +58,6 @@ Begin VB.Form FMain
       Top             =   840
       Width           =   1575
    End
-   Begin VB.CommandButton BtnTestReadAtOnce 
-      Caption         =   "Test ReadeAtOnce"
-      Height          =   375
-      Left            =   120
-      TabIndex        =   11
-      Top             =   840
-      Width           =   1815
-   End
-   Begin VB.CommandButton BtnTestVBP 
-      Caption         =   "Test VBP"
-      Height          =   375
-      Left            =   8160
-      TabIndex        =   6
-      Top             =   480
-      Width           =   1575
-   End
-   Begin VB.CommandButton Command2 
-      Caption         =   "Command2"
-      Height          =   375
-      Left            =   6600
-      TabIndex        =   9
-      Top             =   480
-      Width           =   1575
-   End
-   Begin VB.CommandButton BtnDeleteIniFile 
-      Caption         =   "Delete Ini-file"
-      Height          =   375
-      Left            =   5040
-      TabIndex        =   7
-      Top             =   480
-      Width           =   1575
-   End
-   Begin VB.CommandButton BtnReadRawIniData 
-      Caption         =   "ReadRawIniData"
-      Height          =   375
-      Left            =   3480
-      TabIndex        =   8
-      Top             =   480
-      Width           =   1575
-   End
    Begin VB.CommandButton BtnWriteIniFile 
       Caption         =   "Write Ini-file"
       Height          =   375
@@ -82,11 +66,19 @@ Begin VB.Form FMain
       Top             =   480
       Width           =   1575
    End
+   Begin VB.CommandButton BtnTestReadAtOnce 
+      Caption         =   "Test ReadeAtOnce"
+      Height          =   375
+      Left            =   120
+      TabIndex        =   10
+      Top             =   840
+      Width           =   1815
+   End
    Begin VB.CommandButton BtnTestWriteAtOnce 
       Caption         =   "Test WriteAtOnce"
       Height          =   375
       Left            =   120
-      TabIndex        =   10
+      TabIndex        =   9
       Top             =   480
       Width           =   1815
    End
@@ -128,18 +120,11 @@ Private IniPFN  As PathFileName 'String
 Private IniFile As ConfigIniDocument
 
 Private Sub Form_Load()
+    Me.Caption = Me.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
     Set IniPFN = MNew.PathFileName(Environ("Temp") & "\Test.ini")
     Set IniFile = MNew.ConfigIniDocument(IniPFN)
     Label1.Caption = IniPFN.Value
-    Me.Caption = Me.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
 End Sub
-
-Private Sub Command1_Click()
-    Dim s As String: s = "Dies ist ein String"
-    MsgBox MString.Remove(s, -1)
-    
-End Sub
-
 
 Private Sub BtnTestWriteAtOnce_Click()
     Dim FNm As String: FNm = App.Path & "\mynewini.ini"
@@ -199,23 +184,42 @@ Private Sub BtnTestReadAtOnce_Click()
 End Sub
 
 Private Sub BtnTestVBP_Click()
-    Dim pfn As PathFileName: Set pfn = MNew.PathFileName(App.Path & "\PConfigIni_vbp - Kopie.ini")
+    Dim pfn As PathFileName: Set pfn = MNew.PathFileName(App.Path & "\PConfigIni_vbp.ini")
     If Not pfn.Exists Then
         MsgBox "File does not exist:" & vbCrLf & pfn.Value
     End If
     Dim cid As ConfigIniDocument: Set cid = MNew.ConfigIniDocument(pfn)
     cid.Load
-    Dim cikv As ConfigIniKeyValue
-    Set cikv = cid.Root.KeyValues(0)
-    MsgBox cikv.Value
-    cikv.Value = "H" & cikv.Value
-    cid.Save
-    'cid.Sections
-    'Dim n As Long, sa() As String
-    'n = cid.ValueStrArr("", sa)
-    'MsgBox n
-    'cid.ValueStr("", "Class") = "ErsteKlasse1"
-    'cid.Save
+    Dim i As Long, u As Long
+    Dim s As String, cikv As ConfigIniKeyValue
+    
+    Dim classes As ConfigIniSection: Set classes = cid.Root.Filter("Class")
+    u = classes.KeyValues.Count - 1
+    For i = 0 To u
+        Set cikv = classes.KeyValues.Item(i)
+        s = s & cikv.Value & vbCrLf
+    Next
+    
+    s = s & vbCrLf
+    
+    Dim modules As ConfigIniSection: Set modules = cid.Root.Filter("Module")
+    u = modules.KeyValues.Count - 1
+    For i = 0 To u
+        Set cikv = modules.KeyValues.Item(i)
+        s = s & cikv.Value & vbCrLf
+    Next
+    
+    s = s & vbCrLf
+    
+    Dim forms As ConfigIniSection: Set forms = cid.Root.Filter("Form")
+    u = forms.KeyValues.Count - 1
+    For i = 0 To u
+        Set cikv = forms.KeyValues.Item(i)
+        s = s & cikv.Value & vbCrLf
+    Next
+    
+    Text1.Text = s
+
 End Sub
 
 Private Sub BtnReadIniFile_Click()

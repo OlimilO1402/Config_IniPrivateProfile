@@ -41,8 +41,6 @@ Private m_PFN      As PathFileName
 Private m_PFName   As String 'Short for all writing-functions
 Private m_IsLoaded As Boolean
 Private m_IsDirty  As Boolean
-'Private m_Unicode  As Boolean
-'Private m_UCheckd  As Boolean
 Private m_Root     As ConfigIniSection 'non-hashed
 Private m_Sections As List 'Of ConfigIniSection  'hashed
 Private m_StrSave  As String 'Zwischenspeicher für den letzten Stand der IniDatei
@@ -74,7 +72,7 @@ Friend Function Clone() As ConfigIniDocument
 End Function
 
 Public Sub Clear()
-    Set m_Sections = MNew.List(vbObject, , True)
+    Set m_Sections = MNew.List(vbObject, , True)  'IsHashed:=True
     m_IsLoaded = False 'set this here
     m_IsDirty = False
 End Sub
@@ -83,13 +81,12 @@ Public Property Get Root() As ConfigIniSection
     Set Root = m_Root
 End Property
 
-Public Function Contains(Section As String) As Boolean
-    Contains = m_Sections.ContainsKey(Section)
+Public Function Contains(SectionName As String) As Boolean
+    Contains = m_Sections.ContainsKey(SectionName)
 End Function
 
-Friend Property Let FileName(RHS As String)
-    m_PFName = RHS
-    m_PFN.Value = m_PFName
+Friend Property Let FileName(ByVal Value As String)
+    m_PFName = Value: m_PFN.Value = m_PFName
 End Property
 Public Property Get FileName() As String
     FileName = m_PFName
@@ -103,69 +100,15 @@ Public Property Get IsLoaded() As Boolean
     IsLoaded = m_IsLoaded
 End Property
 
-Friend Property Let IsDirty(BolVal As Boolean)
-    m_IsDirty = BolVal
+Friend Property Let IsDirty(ByVal Value As Boolean)
+    m_IsDirty = Value
 End Property
 Public Property Get IsDirty() As Boolean
     IsDirty = m_IsDirty
 End Property
 
-'Friend Property Let IsUnicode(ByVal Value As Boolean)
-'    Const ChrW_BOM As Integer = &HFEFF
-'    If m_PFN.Exists Then
-'        'check if it's unicode
-'        Dim ChrW_0 As Integer: ChrW_0 = m_PFN.ReadChrW
-'        If ChrW_0 = &H5B Then
-'            m_Unicode = True
-'            Exit Function
-'        End If
-'        If ChrW_0 = ChrW_BOM Then
-'            Dim CnrW_1 As Integer: CnrW_1 = m_PFN.ReadInt
-'            If ChrW_1 = &H5B Then
-'                m_Unicode = True
-'                Exit Function
-'            End If
-'
-'            Dim CnrW_2 As Integer: CnrW_2 = m_PFN.ReadInt
-'            Dim CnrW_3 As Integer: CnrW_3 = m_PFN.ReadInt
-'            If chrWCrLf = &HD Then
-'                ChrW = m_PFN.ReadChrW
-'            End If
-'        End If
-'    Else
-'        'write unicode-bom
-'
-'    End If
-'    m_Unicode = Value
-'End Property
-'Public Property Get IsUnicode() As Boolean
-'    'IsUnicode = m_Unicode
-'    Const ChrW_BOM As Integer = &HFEFF
-'    If m_PFN.Exists Then
-'        'check if it's unicode
-'        Dim ChrW_0 As Integer: ChrW_0 = m_PFN.ReadChrW
-'        If ChrW_0 = &H5B Then
-'            IsUnicode = True
-'            Exit Function
-'        End If
-'        If ChrW_0 = ChrW_BOM Then
-'
-'            Dim ChrW_1 As Integer: CnrW_1 = m_PFN.ReadInt
-'            If ChrW_1 = &H5B Then
-'                IsUnicode = True
-'                Exit Function
-'            End If
-'            Dim ChrW_2 As Integer: ChrW_2 = m_PFN.ReadInt
-'            Dim ChrW_3 As Integer: ChrW_3 = m_PFN.ReadInt
-'            If ChrW_2 = &HD And ChrW_ = &HA Then
-'                ChrW = m_PFN.ReadChrW
-'            End If
-'        End If
-'    Else
-'End Property
-
 Public Sub Load()
-    'first load the root-section, it is the 0-section, it has no name, this section is not like a normal section
+    'first load the root-section, this section is not a normal section, it is the 0-section because it has no name
     Dim line As String
     line = Trim(m_PFN.ReadLine)
     If Left(line, 1) = "[" Then
@@ -196,18 +139,15 @@ Public Sub Load()
 End Sub
 
 Private Sub LoadNormalIni()
-    Dim nSec As ConfigIniSection
-    Dim StrSecArr() As String
-    Dim StrSecName As Variant
 Try: On Error GoTo Catch
-    GetIniArr StrSecArr
+    Dim SectionArr() As String: GetIniArr SectionArr
     Call Clear
-    Dim i As Long, u As Long: u = UBound(StrSecArr)
+    Dim nSec As ConfigIniSection
+    Dim i As Long, u As Long: u = UBound(SectionArr)
     For i = 0 To u
-        'sSecName = StrSecArr(i)
-        Set nSec = MNew.ConfigIniSection(Me, StrSecArr(i))
+        Set nSec = MNew.ConfigIniSection(Me, SectionArr(i))
         Call nSec.Load
-        Call m_Sections.Add(nSec, StrSecArr(i))
+        Call m_Sections.Add(nSec, SectionArr(i))
     Next
     m_IsLoaded = True
     Exit Sub
@@ -229,10 +169,8 @@ Try: On Error GoTo Catch
             Next
             m_PFN.CloseFile
         End If
-        'For Each asec In m_Sections
         For i = 0 To m_Sections.Count - 1
             Set asec = m_Sections.Item(i)
-            'For Each aKey In asec.KeyValues
             For j = 0 To asec.KeyValues.Count - 1
                 Set aKey = asec.KeyValues.Item(j)
                 aKey.Save
@@ -406,45 +344,46 @@ Catch:
     ErrHandler "Get_Section", CStr(IndexKey)
 End Property
 
-Public Function SectionExists(ByVal aSectionName As String) As Boolean
-    SectionExists = Not GetSection(aSectionName) Is Nothing
+Public Function SectionExists(ByVal SectionName As String) As Boolean
+    SectionExists = Not GetSection(SectionName) Is Nothing
 End Function
-Private Function GetSection(ByVal aSectionName As String) As ConfigIniSection
+Private Function GetSection(ByVal SectionName As String) As ConfigIniSection
 Try: On Error Resume Next
-    Set GetSection = m_Sections.Item(aSectionName)
+    Set GetSection = m_Sections.Item(SectionName)
 Catch: On Error GoTo 0
 End Function
-Public Function AddSection(ByVal aSectionName As String) As ConfigIniSection
+Public Function AddSection(ByVal SectionName As String) As ConfigIniSection
     'wenn die Section bereits existiert, wird diese zurückgegeben
-    If Me.Contains(aSectionName) Then
-        Set AddSection = GetSection(aSectionName) 'ohne IIf!!
+    If Me.Contains(SectionName) Then
+        Set AddSection = GetSection(SectionName) 'ohne IIf!!
     Else
-        Set AddSection = MNew.ConfigIniSection(Me, aSectionName)
-        m_Sections.Add AddSection, aSectionName
+        Set AddSection = MNew.ConfigIniSection(Me, SectionName)
+        m_Sections.Add AddSection, SectionName
     End If
 End Function
-Public Sub DeleteSection(ByVal aSectionName As String)
+Public Sub DeleteSection(ByVal SectionName As String)
 Try: On Error GoTo Catch
-    PutIniStr aSectionName, vbNullString, vbNullString, m_PFName
-    If SectionExists(aSectionName) Then
-        Call m_Sections.Remove(aSectionName)
+    PutIniStr SectionName, vbNullString, vbNullString, m_PFName
+    If SectionExists(SectionName) Then
+        Call m_Sections.Remove(SectionName)
     End If
     Exit Sub
 Catch:
-    Call ErrHandler("DeleteSection", aSectionName)
+    Call ErrHandler("DeleteSection", SectionName)
 End Sub
-Public Sub DeleteKey(ByVal aSectionName As String, ByVal aKeyName As String)
+Public Sub DeleteKey(ByVal SectionName As String, ByVal KeyName As String)
 Try: On Error GoTo Catch
-    PutIniStr aSectionName, aKeyName, vbNullString, m_PFName
+    PutIniStr SectionName, KeyName, vbNullString, m_PFName
     Dim asec As ConfigIniSection
-    If SectionExists(aSectionName) Then
-        Set asec = m_Sections.Item(aSectionName)
-        asec.DeleteKeyValue aKeyName
+    If SectionExists(SectionName) Then
+        Set asec = m_Sections.Item(SectionName)
+        asec.DeleteKeyValue KeyName
     End If
     Exit Sub
 Catch:
-    ErrHandler "DeleteKey", aSectionName, aKeyName
+    ErrHandler "DeleteKey", SectionName, KeyName
 End Sub
+
 Public Property Get CountEntriesInSection(ByVal aSection As String) As Long
     Dim StrBuff As String:  Call GetSectionBuffer(aSection, StrBuff)
 Try: On Error GoTo Catch
@@ -453,6 +392,7 @@ Try: On Error GoTo Catch
 Catch:
     Call ErrHandler("CountEntriesInSection", aSection)
 End Property
+
 Public Property Get SectionNamesToCol() As Collection
     Set SectionNamesToCol = New Collection
     Dim StrBuff As String
@@ -486,19 +426,20 @@ Catch:
     Call ErrHandler("SectionNamesToCol")
 End Property
 
-Public Function SectionToCol(aSection As String) As Collection
-'Die Funktion gibt in einer Collection alle Elemente der Section zurück (mit Keys)
+Public Function SectionToCol(ByVal SectionName As String) As Collection
+    'returns a list of all keyvalue-elements of the section
     Set SectionToCol = New Collection
 Try: On Error GoTo Catch
-    Dim SNamArr() As String: Call GetIniArr(SNamArr, m_PFName, aSection)
+    Dim SectionNames() As String: GetIniArr SectionNames, m_PFName, SectionName
     Dim i As Long
-    For i = 0 To UBound(SNamArr)
-        Call SectionToCol.Add(SNamArr(i))
+    For i = 0 To UBound(SectionNames)
+        Call SectionToCol.Add(SectionNames(i))
     Next
     Exit Function
 Catch:
     Call ErrHandler("SectionToCol")
 End Function
+
 Public Sub GetIniArr(aStrArr() As String, _
                      Optional ByVal aIniPFN As String, _
                      Optional ByVal aSection As String)
@@ -551,7 +492,9 @@ End Sub
 '##############################'  ToStr  '##############################'
 Public Function ToStr() As String
     Dim Section As ConfigIniSection
-    For Each Section In m_Sections
+    Dim i As Long, u As Long: u = m_Sections.Count - 1
+    For i = 0 To u
+        Set Section = m_Sections.Item(i)
         ToStr = ToStr & Section.ToStr & vbCrLf
     Next
 End Function

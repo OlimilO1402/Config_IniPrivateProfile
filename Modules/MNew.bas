@@ -83,7 +83,7 @@ Public Function ConfigIniKeyValue(IniFile As ConfigIniDocument, Section As Confi
 End Function
 
 Public Function ConfigIniKeyValueS(IniFile As ConfigIniDocument, ByVal Section As String, ByVal KeyName As String, Optional VarDefault As Variant) As ConfigIniKeyValue
-    Set ConfigIniKeyValueS = New ConfigIniKeyValue: ConfigIniKeyValueS.NewS aIniFile, aSection, aKeyName, VarDefault
+    Set ConfigIniKeyValueS = New ConfigIniKeyValue: ConfigIniKeyValueS.NewS IniFile, Section, KeyName, VarDefault
 End Function
 
 Public Function PathFileName(ByVal aPathFileName As String, _
