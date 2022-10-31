@@ -12,10 +12,10 @@ Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit 'Z:141(08.01.2008)
-#If Unicode Then
-    Private Declare Function GetPrivateProfileSection Lib "kernel32" Alias "GetPrivateProfileSectionW" (ByVal pSection As LongPtr, ByVal pRetBuff As LongPtr, ByVal nsize As Long, ByVal lpFileName As LongPtr) As Long
+#If VBA7 Then
+    Private Declare PtrSafe Function GetPrivateProfileSectionW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
 #Else
-    Private Declare Function GetPrivateProfileSection Lib "kernel32" Alias "GetPrivateProfileSectionA" (ByVal pSection As LongPtr, ByVal pRetBuff As LongPtr, ByVal nsize As Long, ByVal lpFileName As LongPtr) As Long
+    Private Declare Function GetPrivateProfileSectionW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
 #End If
 Private m_IniFile   As ConfigIniDocument
 Private m_Section   As String
@@ -25,13 +25,13 @@ Private Sub Class_Initialize()
     Set m_KeyValues = MNew.List(vbObject)
 End Sub
 
-Friend Sub New_(aIniFile As ConfigIniDocument, SectionName As String)
-    Set m_IniFile = aIniFile
+Friend Sub New_(IniFile As ConfigIniDocument, ByVal SectionName As String)
+    Set m_IniFile = IniFile
     m_Section = SectionName
 End Sub
 'Copy to MNew:
-'Public Function ConfigIniSection(aIniFile As ConfigIniDocument, SectionName As String) As ConfigIniSection
-'    Set ConfigIniSection = New ConfigIniSection: ConfigIniSection.New_ aIniFile, StrSectionName
+'Public Function ConfigIniSection(IniFile As ConfigIniDocument, SectionName As String) As ConfigIniSection
+'    Set ConfigIniSection = New ConfigIniSection: ConfigIniSection.New_ IniFile, SectionName
 'End Function
 
 Friend Sub NewC(other As ConfigIniSection)
@@ -50,6 +50,9 @@ Public Sub Clear()
     Class_Initialize
 End Sub
 
+Friend Property Set KeyValues(aKeyValueList As Collection)
+    Set m_KeyValues = aKeyValueList
+End Property
 Public Property Get KeyValues() As List
     Set KeyValues = m_KeyValues
 End Property
@@ -69,12 +72,16 @@ Public Property Get IniFile() As ConfigIniDocument
     Set IniFile = m_IniFile
 End Property
 
-'Public Property Set Keys(aCol As Collection)
-'    Set mKeyCol = aCol
-'End Property
-'Public Property Get Keys() As Collection
-'    Set Keys = mKeyCol
-'End Property
+Public Function Filter(ByVal AllKeyName As String) As List
+    Dim cikv As ConfigIniKeyValue
+    Dim i As Long: Set Filter = New List
+    For i = 0 To m_KeyValues.Count - 1
+        Set cikv = m_KeyValues.Item(i)
+        If cikv.Name = AllKeyName Then
+            Filter.Add cikv
+        End If
+    Next
+End Function
 'Public Function CloneKeys() As Collection
 '    Set CloneKeys = New Collection
 '    'jetzt auch alle ConfigIniKeyValues Clonen
@@ -87,38 +94,38 @@ End Property
 '  Set mKeyCol.Item(IndexKey) = aKeyVal
 '  Blödsinn das geht doch so überhaupt nicht
 'End Property
-'Public Property Get Key(IndexKey As Variant) As ConfigIniKeyValue
-'    Set Key = GetKey(CStr(IndexKey)) 'mKeyCol.Item(IndexKey)
-'    If Key Is Nothing Then
-'        'in jedem Fall etwas zurückliefern, wenn nicht vorhanden dann anlegen
-'        'ist das praktikabel? we will see, hehe
-'        Set Key = MNew.ConfigIniKeyValue(mIniFile, Me, CStr(IndexKey), vbNullString)
-'        Call mKeyCol.Add(Key, CStr(IndexKey))
-'    End If
-'End Property
-'
-'Public Function KeyExists(aKeyName As String) As Boolean
-'    KeyExists = Not GetKey(aKeyName) Is Nothing
-'End Function
-'Private Function GetKey(aKeyName As String) As ConfigIniKeyValue
-'Try: On Error Resume Next
-'    Set GetKey = mKeyCol.Item(aKeyName)
-'Catch: On Error GoTo 0
-'End Function
+Public Property Get KeyValue(IndexKey As Variant) As ConfigIniKeyValue
+    Set KeyValue = m_KeyValues.ItemByKey(CStr(IndexKey)) 'mKeyCol.Item(IndexKey)
+    If KeyValue Is Nothing Then
+        'in jedem Fall etwas zurückliefern, wenn nicht vorhanden dann anlegen
+        'ist das praktikabel? we will see, hehe
+        Set KeyValue = MNew.ConfigIniKeyValue(m_IniFile, Me, CStr(IndexKey), vbNullString)
+        m_KeyValues.Add KeyValue ', CStr(IndexKey))
+    End If
+End Property
+
+Public Function KeyValueExists(aKeyName As String) As Boolean
+    KeyValueExists = Not GetKeyValue(aKeyName) Is Nothing
+End Function
+Private Function GetKeyValue(aKeyName As String) As ConfigIniKeyValue
+Try: On Error Resume Next
+    Set GetKeyValue = m_KeyValues.ItemByKey(aKeyName)
+Catch: On Error GoTo 0
+End Function
 
 Public Function AddKeyValue(ByVal aKeyName As String, Optional ByVal VarDefault) As ConfigIniKeyValue
     'wenn der Schlüssel bereits existiert, wird dieser zurückgegeben
-    Set AddKeyValue = GetKey(aKeyName)
+    Set AddKeyValue = GetKeyValue(aKeyName)
     If AddKeyValue Is Nothing Then
         Set AddKeyValue = MNew.ConfigIniKeyValue(m_IniFile, Me, aKeyName, VarDefault)
         m_KeyValues.Add AddKeyValue
     End If
 End Function
 
-Public Function DeleteKey(aKeyName As String) As Boolean
-    If KeyExists(aKeyName) Then
+Public Function DeleteKeyValue(aKeyName As String) As Boolean
+    If KeyValueExists(aKeyName) Then
         m_KeyValues.Remove m_KeyValues.IndexOf(aKeyName)
-        DeleteKey = True
+        DeleteKeyValue = True
     End If
 End Function
 
@@ -146,34 +153,35 @@ Public Sub Load()
                 nkey.HasValue = False
                 kk = CStr(m_KeyValues.Count)
             End If
-            m_KeyValues.Add nkey, kk
+            m_KeyValues.Add nkey ', kk
         End If
     Next
 End Sub
 
 Public Function CountEntries() As Long
-    CountEntries = m_IniFile.CountEntriesInSection(mSection)
+    CountEntries = m_IniFile.CountEntriesInSection(m_Section)
 End Function
 
 Public Function StrKeyValsToCol() As Collection
-    Set StrKeyValsToCol = mIniFile.SectionToCol(mSection)
+    Set StrKeyValsToCol = m_IniFile.SectionToCol(m_Section)
 End Function
 
 '##############################'  ToStr  '##############################'
 Public Function NameToStr() As String
-    NameToStr = "[" & mSection & "]"
-End Function
-Public Function ToStr() As String
-    Dim nkey As ConfigIniKeyValue
-    Dim i As Long
-    ToStr = ToStr & Me.NameToStr
-    For i = 1 To m_KeyValues.Count
-        ToStr = ToStr & vbCrLf
-        Set nkey = m_KeyValues.Item(i)
-        ToStr = ToStr & nkey.ToStr
-    Next
+    NameToStr = "[" & m_Section & "]"
 End Function
 
-Private Function GetIniSection(ByVal aSection As String, ByRef aRetBuff As String, ByVal nsize As Long, ByVal lpFileName As String) As Long
-    GetIniSection = GetPrivateProfileSection(StrPtrWA(aSection), StrPtr(aRetBuff), nsize, StrPtrWA(lpFileName))
+Public Function ToStr() As String
+    Dim s As String: s = Me.NameToStr
+    Dim nkey As ConfigIniKeyValue
+    Dim i As Long
+    For i = 0 To m_KeyValues.Count - 1
+        Set nkey = m_KeyValues.Item(i)
+        s = s & vbCrLf & nkey.ToStr
+    Next
+    ToStr = s
+End Function
+
+Private Function GetIniSection(ByVal aSection As String, ByRef aRetBuff As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
+    GetIniSection = GetPrivateProfileSectionW(StrPtr(aSection), StrPtr(aRetBuff), nSize, StrPtr(lpFileName))
 End Function

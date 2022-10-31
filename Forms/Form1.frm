@@ -1,22 +1,54 @@
 VERSION 5.00
-Begin VB.Form Form1 
-   Caption         =   "Form1"
+Begin VB.Form FMain 
+   Caption         =   "Ini-Configfile"
    ClientHeight    =   5895
    ClientLeft      =   60
    ClientTop       =   450
-   ClientWidth     =   8550
+   ClientWidth     =   9855
    Icon            =   "Form1.frx":0000
    LinkTopic       =   "Form1"
    ScaleHeight     =   5895
-   ScaleWidth      =   8550
+   ScaleWidth      =   9855
    StartUpPosition =   3  'Windows-Standard
-   Begin VB.CommandButton BtnTestWriteAtOnce 
-      Caption         =   "Test WriteAtOnce"
+   Begin VB.CommandButton BtnSetWindowPosSize 
+      Caption         =   "Read and set PosAndSize of window"
       Height          =   375
       Left            =   6600
-      TabIndex        =   10
-      Top             =   960
+      TabIndex        =   2
+      Top             =   840
+      Width           =   3135
+   End
+   Begin VB.CommandButton BtnWriteWindowPosSize 
+      Caption         =   "Write PosAndSize of window"
+      Height          =   375
+      Left            =   3480
+      TabIndex        =   5
+      Top             =   840
+      Width           =   3135
+   End
+   Begin VB.CommandButton BtnReadIniFile 
+      Caption         =   "Read Ini-file"
+      Height          =   375
+      Left            =   1920
+      TabIndex        =   1
+      Top             =   840
+      Width           =   1575
+   End
+   Begin VB.CommandButton BtnTestReadAtOnce 
+      Caption         =   "Test ReadeAtOnce"
+      Height          =   375
+      Left            =   120
+      TabIndex        =   11
+      Top             =   840
       Width           =   1815
+   End
+   Begin VB.CommandButton BtnTestVBP 
+      Caption         =   "Test VBP"
+      Height          =   375
+      Left            =   8160
+      TabIndex        =   6
+      Top             =   480
+      Width           =   1575
    End
    Begin VB.CommandButton Command2 
       Caption         =   "Command2"
@@ -24,12 +56,12 @@ Begin VB.Form Form1
       Left            =   6600
       TabIndex        =   9
       Top             =   480
-      Width           =   1815
+      Width           =   1575
    End
    Begin VB.CommandButton BtnDeleteIniFile 
       Caption         =   "Delete Ini-file"
       Height          =   375
-      Left            =   4920
+      Left            =   5040
       TabIndex        =   7
       Top             =   480
       Width           =   1575
@@ -37,7 +69,7 @@ Begin VB.Form Form1
    Begin VB.CommandButton BtnReadRawIniData 
       Caption         =   "ReadRawIniData"
       Height          =   375
-      Left            =   3360
+      Left            =   3480
       TabIndex        =   8
       Top             =   480
       Width           =   1575
@@ -45,34 +77,18 @@ Begin VB.Form Form1
    Begin VB.CommandButton BtnWriteIniFile 
       Caption         =   "Write Ini-file"
       Height          =   375
-      Left            =   1680
+      Left            =   1920
       TabIndex        =   0
       Top             =   480
       Width           =   1575
    End
-   Begin VB.CommandButton BtnReadIniFile 
-      Caption         =   "Read Ini-file"
+   Begin VB.CommandButton BtnTestWriteAtOnce 
+      Caption         =   "Test WriteAtOnce"
       Height          =   375
       Left            =   120
-      TabIndex        =   1
+      TabIndex        =   10
       Top             =   480
-      Width           =   1575
-   End
-   Begin VB.CommandButton BtnTestVBP 
-      Caption         =   "Test VBP"
-      Height          =   375
-      Left            =   6600
-      TabIndex        =   6
-      Top             =   0
       Width           =   1815
-   End
-   Begin VB.CommandButton BtnWriteWindowPosSize 
-      Caption         =   "Write PosAndSize of window"
-      Height          =   375
-      Left            =   120
-      TabIndex        =   5
-      Top             =   960
-      Width           =   3135
    End
    Begin VB.TextBox Text1 
       BeginProperty Font 
@@ -89,16 +105,8 @@ Begin VB.Form Form1
       MultiLine       =   -1  'True
       ScrollBars      =   3  'Beides
       TabIndex        =   4
-      Top             =   1440
-      Width           =   8535
-   End
-   Begin VB.CommandButton BtnSetWindowPosSize 
-      Caption         =   "Read and set PosAndSize of window"
-      Height          =   375
-      Left            =   3360
-      TabIndex        =   2
-      Top             =   960
-      Width           =   3135
+      Top             =   1320
+      Width           =   9735
    End
    Begin VB.Label Label1 
       Caption         =   "Label1"
@@ -109,7 +117,7 @@ Begin VB.Form Form1
       Width           =   6375
    End
 End
-Attribute VB_Name = "Form1"
+Attribute VB_Name = "FMain"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -119,33 +127,83 @@ Option Explicit
 Private IniPFN  As PathFileName 'String
 Private IniFile As ConfigIniDocument
 
+Private Sub Form_Load()
+    Set IniPFN = MNew.PathFileName(Environ("Temp") & "\Test.ini")
+    Set IniFile = MNew.ConfigIniDocument(IniPFN)
+    Label1.Caption = IniPFN.Value
+    Me.Caption = Me.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
+End Sub
+
 Private Sub Command1_Click()
     Dim s As String: s = "Dies ist ein String"
     MsgBox MString.Remove(s, -1)
     
 End Sub
 
-Private Sub BtnTestWriteAtOnce_Click()
-    Dim ini As ConfigIniDocument: Set ini = MNew.ConfigIniDocument(MNew.PathFileName("C:\TestDir\IniTest\mynewini.ini"))
-    
-    ini.ValueStr("SectionOne", "FirstValue", "Null") = "Eins"
-    Dim s As String: s = ini.PFN.ReadStr
-    Text1.Text = s
-    ini.PFN.OpenFileExplorer
-End Sub
 
-Private Sub Form_Load()
-    Set IniPFN = MNew.PathFileName(Environ("Temp") & "\Test.ini")
-    Set IniFile = MNew.ConfigIniDocument(IniPFN)
-    Label1.Caption = IniPFN.Value
+Private Sub BtnTestWriteAtOnce_Click()
+    Dim FNm As String: FNm = App.Path & "\mynewini.ini"
+    Label1.Caption = FNm
+    Dim ini As ConfigIniDocument: Set ini = MNew.ConfigIniDocument(MNew.PathFileName(FNm))
+    Dim aSection As String, aKey As String
+    aSection = "SectionOne"
+    aKey = "FirstValue":  ini.ValueBol(aSection, aKey, False) = True
+    aKey = "SecondValue": ini.ValueInt(aSection, aKey, 0) = 123456
+    aSection = "SectionTwo"
+    aKey = "ThirdValue":  ini.ValueStr(aSection, aKey, "Null") = "Eins"
+    Dim p As PosSizeF: p = MNew.PosSizeF(Me)
+    Dim rv As Long
+    aKey = "FourthValue":  ini.ValueStructP(aSection, aKey, LenB(p), VarPtr(p)) = rv
+    'Debug.Print rv
+    Dim s As String: s = ini.pfn.ReadAllStr: ini.pfn.CloseFile
+    Text1.Text = s 'IIf(ini.FileIsUnicode, StrConv(s, vbFromUnicode), s)
+    'ini.pfn.OpenFileExplorer
+End Sub
+Private Sub BtnTestReadAtOnce_Click()
+    Text1.Text = ""
+    Dim T As String
+    Dim ini As ConfigIniDocument: Set ini = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\mynewini.ini"))
+    Dim p As PosSizeF: Dim rv As Long
+    Dim aSection As String, aKey As String
+    aSection = "SectionOne"
+    T = T & "[" & aSection & "]" & vbCrLf
+    aKey = "FirstValue":  Dim b As Boolean: b = ini.ValueBol(aSection, aKey, False):    T = T & aKey & " = " & b & vbCrLf
+    aKey = "SecondValue": Dim i As Long:    i = ini.ValueInt(aSection, aKey, 1):        T = T & aKey & " = " & i & vbCrLf
+    
+    aSection = "SectionTwo"
+    T = T & "[" & aSection & "]" & vbCrLf
+    aKey = "ThirdValue":  Dim s As String:  s = ini.ValueStr(aSection, aKey, "Null"):   T = T & aKey & " = " & s & vbCrLf
+    aKey = "FourthValue": rv = ini.ValueStructP(aSection, aKey, LenB(p), VarPtr(p)):    T = T & aKey & " = " & MNew.PosSizeF_ToStr(p) & vbCrLf
+
+    Dim secnms As Collection: Set secnms = ini.SectionNamesToCol
+    Dim v
+    For Each v In secnms
+        T = T & v & vbCrLf
+    Next
+    Dim iarr() As String
+    
+    ini.GetIniArr iarr, , aSection
+    
+    'Dim i As Long
+    For i = 0 To UBound(iarr)
+        v = iarr(i)
+        T = T & v & vbCrLf
+    Next
+    
+'    Dim iniSec As ConfigIniSection: Set iniSec = MNew.ConfigIniSection(ini, aSection)
+'    Dim kvs As Collection: Set kvs = iniSec.StrKeyValsToCol
+'    For Each v In kvs
+'        T = T & v & vbCrLf
+'    Next
+    Text1.Text = T
 End Sub
 
 Private Sub BtnTestVBP_Click()
-    Dim PFN As PathFileName: Set PFN = MNew.PathFileName(App.Path & "\PConfigIni_vbp - Kopie.ini")
-    If Not PFN.Exists Then
-        MsgBox "File does not exist:" & vbCrLf & PFN.Value
+    Dim pfn As PathFileName: Set pfn = MNew.PathFileName(App.Path & "\PConfigIni_vbp - Kopie.ini")
+    If Not pfn.Exists Then
+        MsgBox "File does not exist:" & vbCrLf & pfn.Value
     End If
-    Dim cid As ConfigIniDocument: Set cid = MNew.ConfigIniDocument(PFN)
+    Dim cid As ConfigIniDocument: Set cid = MNew.ConfigIniDocument(pfn)
     cid.Load
     Dim cikv As ConfigIniKeyValue
     Set cikv = cid.Root.KeyValues(0)
@@ -247,7 +305,7 @@ Private Sub BtnReadRawIniData_Click()
         MsgBox "File does not exist, write inifile first."
         Exit Sub
     End If
-    Text1.Text = IniPFN.ReadStr
+    Text1.Text = IniPFN.ReadAllStr
     IniPFN.CloseFile
 End Sub
 
@@ -283,7 +341,7 @@ Private Sub BtnSetWindowPosSize_Click()
     
     With cs
         Me.WindowState = FormWindowStateConstants.vbNormal
-        Me.Move .Position.x, .Position.Y, .Size.Width, .Size.Height
+        Me.Move .Position.X, .Position.Y, .Size.Width, .Size.Height
     End With
 End Sub
 

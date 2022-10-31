@@ -51,15 +51,15 @@ Friend Sub NewS(aIniFile As ConfigIniDocument, _
                 aKeyName As String, _
                 Optional VarDefault As Variant)
     Set m_IniFile = aIniFile: Set m_Section = MNew.ConfigIniSection(aIniFile, aSection)
-    m_KeyName = aKeyName: m_Default = VarDefault: mValue = ValueStr
+    m_KeyName = aKeyName: m_Default = VarDefault: m_Value = ValueStr
 End Sub
 
 Friend Sub NewC(other As ConfigIniKeyValue)
-    witt other
-    Set m_IniFile = .IniFile: Set m_Section = .Section
-    Set m_KeyName = .Name:  Set m_hansvalue = .HasValue
-          m_Value = .Value:       m_Default = .Default
-          End With
+    With other
+        Set m_IniFile = .IniFile: Set m_Section = .Section
+            m_KeyName = .Name:       m_HasValue = .HasValue
+              m_Value = .Value:       m_Default = .Default
+    End With
 End Sub
 
 Friend Function Clone() As ConfigIniKeyValue
@@ -71,21 +71,21 @@ Public Sub GetValue()
 End Sub
 
 Public Property Set IniFile(aIni As ConfigIniDocument)
-    Set mIniFile = aIni
+    Set m_IniFile = aIni
 End Property
 Public Property Get IniFile() As ConfigIniDocument
-    Set IniFile = mIniFile
+    Set IniFile = m_IniFile
 End Property
 
 Public Property Set Section(asec As ConfigIniSection)
-    Set mSection = asec
+    Set m_Section = asec
 End Property
 Public Property Get Section() As ConfigIniSection
-    Set Section = mSection
+    Set Section = m_Section
 End Property
 
 Public Property Let Name(ByVal aValue As String)
-    m_KeyName = StrVal
+    m_KeyName = aValue
 End Property
 Public Property Get Name() As String
     Name = m_KeyName
@@ -113,10 +113,10 @@ End Property
 '    Set m_Default = VarVal
 'End Property
 Public Property Let Default(VarVal As Variant)
-    mDefault = VarVal
+    m_Default = VarVal
 End Property
 Public Property Get Default() As Variant
-    Default = mDefault
+    Default = m_Default
 End Property
 
 Public Sub Save()
@@ -140,7 +140,7 @@ Public Property Let ValueInt(LngVal As Long)
 End Property
 Public Property Get ValueInt() As Long
     If Not IsNumeric(m_Default) Then m_Default = 0
-    ValueInt = mIniFile.ValueInt(m_Section.Name, m_KeyName, CLng(m_Default))
+    ValueInt = m_IniFile.ValueInt(m_Section.Name, m_KeyName, CLng(m_Default))
 End Property
 
 'einen String Lesen/Schreiben

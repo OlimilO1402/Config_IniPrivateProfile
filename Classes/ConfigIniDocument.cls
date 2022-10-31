@@ -14,36 +14,35 @@ Attribute VB_Exposed = False
 Option Explicit 'Z:468(11.06.2008)
 '##############################'   PrivateProfile-API   '##############################'
 #If VBA7 Then
-    
+    'Ini reading
+    Private Declare PtrSafe Function GetPrivateProfileIntW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal nDefault As Long, ByVal lpFileName As LongPtr) As Long
+    Private Declare PtrSafe Function GetPrivateProfileStringW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpDefault As LongPtr, ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
+    Private Declare PtrSafe Function GetPrivateProfileStructW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal lpFileName As LongPtr) As Long
+    Private Declare PtrSafe Function GetPrivateProfileSectionW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
+    Private Declare PtrSafe Function GetPrivateProfileSectionNamesW Lib "kernel32" (ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
+    'Ini writing
+    Private Declare PtrSafe Function WritePrivateProfileStringW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpString As LongPtr, ByVal lpFileName As LongPtr) As Long
+    Private Declare PtrSafe Function WritePrivateProfileStructW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal lpFileName As LongPtr) As Long
+    Private Declare PtrSafe Function WritePrivateProfileSectionW Lib "kernel32" (ByVal pSection As LongPtr, ByVal lpString As LongPtr, ByVal lpFileName As LongPtr) As Long
 #Else
-    'Ini Unicode reading
+    'Ini reading
     Private Declare Function GetPrivateProfileIntW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal nDefault As Long, ByVal lpFileName As LongPtr) As Long
     Private Declare Function GetPrivateProfileStringW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpDefault As LongPtr, ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
     Private Declare Function GetPrivateProfileStructW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal lpFileName As LongPtr) As Long
     Private Declare Function GetPrivateProfileSectionW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
     Private Declare Function GetPrivateProfileSectionNamesW Lib "kernel32" (ByVal pRetBuff As LongPtr, ByVal nSize As Long, ByVal lpFileName As LongPtr) As Long
-    'Ini Unicode writing
+    'Ini writing
     Private Declare Function WritePrivateProfileStringW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpString As LongPtr, ByVal lpFileName As LongPtr) As Long
     Private Declare Function WritePrivateProfileStructW Lib "kernel32" (ByVal pSection As LongPtr, ByVal pKey As LongPtr, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal lpFileName As LongPtr) As Long
     Private Declare Function WritePrivateProfileSectionW Lib "kernel32" (ByVal pSection As LongPtr, ByVal lpString As LongPtr, ByVal lpFileName As LongPtr) As Long
-    
-    'Ini Ansi reading
-    Private Declare Function GetPrivateProfileIntA Lib "kernel32" (ByVal pSection As String, ByVal pKey As String, ByVal nDefault As Long, ByVal lpFileName As String) As Long
-    Private Declare Function GetPrivateProfileStringA Lib "kernel32" (ByVal pSection As String, ByVal pKey As String, ByVal lpDefault As String, ByVal pRetBuff As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-    Private Declare Function GetPrivateProfileStructA Lib "kernel32" (ByVal pSection As String, ByVal pKey As String, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal lpFileName As String) As Long
-    Private Declare Function GetPrivateProfileSectionA Lib "kernel32" (ByVal pSection As String, ByVal pRetBuff As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-    Private Declare Function GetPrivateProfileSectionNamesA Lib "kernel32" (ByVal pRetBuff As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-    'Ini Ansi writing
-    Private Declare Function WritePrivateProfileStringA Lib "kernel32" (ByVal pSection As String, ByVal pKey As String, ByVal lpString As String, ByVal lpFileName As String) As Long
-    Private Declare Function WritePrivateProfileStructA Lib "kernel32" (ByVal pSection As String, ByVal pKey As String, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal lpFileName As String) As Long
-    Private Declare Function WritePrivateProfileSectionA Lib "kernel32" (ByVal pSection As String, ByVal lpString As String, ByVal lpFileName As String) As Long
 #End If
 'private members
 Private m_PFN      As PathFileName
 Private m_PFName   As String 'Short for all writing-functions
 Private m_IsLoaded As Boolean
 Private m_IsDirty  As Boolean
-Private m_Unicode  As Boolean
+'Private m_Unicode  As Boolean
+'Private m_UCheckd  As Boolean
 Private m_Root     As ConfigIniSection 'non-hashed
 Private m_Sections As List 'Of ConfigIniSection  'hashed
 Private m_StrSave  As String 'Zwischenspeicher für den letzten Stand der IniDatei
@@ -55,7 +54,7 @@ Private Sub Class_Initialize()
 End Sub
 
 Friend Sub New_(aPFN As PathFileName, Optional ByVal bUnicode As Boolean = False)
-    Set m_PFN = aPFN: m_PFName = m_PFN.Value: m_Unicode = bUnicode
+    Set m_PFN = aPFN: m_PFName = m_PFN.Value ': m_Unicode = bUnicode
 End Sub
 'Copy to MNew:
 'Public Function ConfigIniDocument(aPFN As PathFileName, Optional ByVal bUnicode As Boolean = False) As ConfigIniDocument
@@ -77,6 +76,7 @@ End Function
 Public Sub Clear()
     Set m_Sections = MNew.List(vbObject, , True)
     m_IsLoaded = False 'set this here
+    m_IsDirty = False
 End Sub
 
 Public Property Get Root() As ConfigIniSection
@@ -95,8 +95,8 @@ Public Property Get FileName() As String
     FileName = m_PFName
 End Property
 
-Public Property Get PFN() As PathFileName
-    Set PFN = m_PFN
+Public Property Get pfn() As PathFileName
+    Set pfn = m_PFN
 End Property
 
 Public Property Get IsLoaded() As Boolean
@@ -110,12 +110,59 @@ Public Property Get IsDirty() As Boolean
     IsDirty = m_IsDirty
 End Property
 
-Friend Property Let IsUnicode(ByVal Value As Boolean)
-    m_Unicode = Value
-End Property
-Public Property Get IsUnicode() As Boolean
-    IsUnicode = m_Unicode
-End Property
+'Friend Property Let IsUnicode(ByVal Value As Boolean)
+'    Const ChrW_BOM As Integer = &HFEFF
+'    If m_PFN.Exists Then
+'        'check if it's unicode
+'        Dim ChrW_0 As Integer: ChrW_0 = m_PFN.ReadChrW
+'        If ChrW_0 = &H5B Then
+'            m_Unicode = True
+'            Exit Function
+'        End If
+'        If ChrW_0 = ChrW_BOM Then
+'            Dim CnrW_1 As Integer: CnrW_1 = m_PFN.ReadInt
+'            If ChrW_1 = &H5B Then
+'                m_Unicode = True
+'                Exit Function
+'            End If
+'
+'            Dim CnrW_2 As Integer: CnrW_2 = m_PFN.ReadInt
+'            Dim CnrW_3 As Integer: CnrW_3 = m_PFN.ReadInt
+'            If chrWCrLf = &HD Then
+'                ChrW = m_PFN.ReadChrW
+'            End If
+'        End If
+'    Else
+'        'write unicode-bom
+'
+'    End If
+'    m_Unicode = Value
+'End Property
+'Public Property Get IsUnicode() As Boolean
+'    'IsUnicode = m_Unicode
+'    Const ChrW_BOM As Integer = &HFEFF
+'    If m_PFN.Exists Then
+'        'check if it's unicode
+'        Dim ChrW_0 As Integer: ChrW_0 = m_PFN.ReadChrW
+'        If ChrW_0 = &H5B Then
+'            IsUnicode = True
+'            Exit Function
+'        End If
+'        If ChrW_0 = ChrW_BOM Then
+'
+'            Dim ChrW_1 As Integer: CnrW_1 = m_PFN.ReadInt
+'            If ChrW_1 = &H5B Then
+'                IsUnicode = True
+'                Exit Function
+'            End If
+'            Dim ChrW_2 As Integer: ChrW_2 = m_PFN.ReadInt
+'            Dim ChrW_3 As Integer: ChrW_3 = m_PFN.ReadInt
+'            If ChrW_2 = &HD And ChrW_ = &HA Then
+'                ChrW = m_PFN.ReadChrW
+'            End If
+'        End If
+'    Else
+'End Property
 
 Public Sub Load()
     'first load the root-section, it is the 0-section, it has no name, this section is not like a normal section
@@ -192,6 +239,7 @@ Try: On Error GoTo Catch
             Next
         Next
     End If
+    m_IsDirty = False
     GoTo Finally
 Catch:
     ErrHandler "Save"
@@ -245,7 +293,7 @@ Catch:
 End Property
 Public Property Get ValueInt(ByVal aSection As String, ByVal aKey As String, ByVal Default As Long) As Long
 Try: On Error GoTo Catch
-    ValueInt = GetIniIntA(aSection, aKey, Default, m_PFName)
+    ValueInt = GetIniInt(aSection, aKey, Default, m_PFName)
     Exit Property
 Catch:
     Call ErrHandler("Get_ValueInt", aSection, aKey, CStr(Default))
@@ -272,11 +320,11 @@ End Property
 'Pass the array ByRef, the return-value is the numer of items in the array
 Public Property Let ValueStrArr(ByVal aSection As String, strArr() As String, RetVal As Long)
 Try: On Error GoTo Catch
-    Dim Buffer As String ', i As Long
-    Buffer = Join(strArr, vbNullChar)
+    Dim buffer As String ', i As Long
+    buffer = Join(strArr, vbNullChar)
     'Hey, warum nicht join verwenden?
     'Dim L As Long: L = LBound(strArr)
-    'Dim u As Long: u = UBound(strArr)
+    Dim u As Long: u = UBound(strArr)
     'For i = L To u
     '    Buffer = Buffer & strArr(i)
     '    If i < u Then Buffer = Buffer & vbNullChar
@@ -284,7 +332,7 @@ Try: On Error GoTo Catch
     'Zuerst die Section komplett löschen, denn falls sie vorher länger gewesen wäre würde sonst nur ein Teil überschrieben werden.
     Dim rv As Long
     rv = PutIniStr(aSection, vbNullString, vbNullString, m_PFName)
-    rv = PutIniSection(aSection, Buffer, m_PFName)
+    rv = PutIniSection(aSection, buffer, m_PFName)
     RetVal = u + 1
     Exit Property
 Catch:
@@ -294,18 +342,18 @@ Public Property Get ValueStrArr(ByVal aSection As String, strArr() As String) As
 Try: On Error GoTo Catch
     Dim StrBuff As String: Call GetSectionBuffer(aSection, StrBuff)
     Dim i As Long, n As Long
-    Dim pos As Long: pos = 1
-    Dim oPos As Long: oPos = pos
+    Dim Pos As Long: Pos = 1
+    Dim oPos As Long: oPos = Pos
     If Len(StrBuff) > 0 Then
         'String mit Trennzeichen Chr$(0) in ein Feld umwandeln
         n = CountNullCharsInBuffer(StrBuff)
         ReDim strArr(0 To n - 1)
         For i = 0 To n - 1
-            pos = InStr(oPos, StrBuff, vbNullChar)
-            If pos > 0 Then
-                strArr(i) = Mid$(StrBuff, oPos, pos - oPos)
+            Pos = InStr(oPos, StrBuff, vbNullChar)
+            If Pos > 0 Then
+                strArr(i) = Mid$(StrBuff, oPos, Pos - oPos)
             End If
-            oPos = pos + 1
+            oPos = Pos + 1
         Next
     End If
     ValueStrArr = n
@@ -391,7 +439,7 @@ Try: On Error GoTo Catch
     Dim asec As ConfigIniSection
     If SectionExists(aSectionName) Then
         Set asec = m_Sections.Item(aSectionName)
-        asec.DeleteKey aKeyName
+        asec.DeleteKeyValue aKeyName
     End If
     Exit Sub
 Catch:
@@ -408,7 +456,7 @@ End Property
 Public Property Get SectionNamesToCol() As Collection
     Set SectionNamesToCol = New Collection
     Dim StrBuff As String
-    Dim oPos As Long, pos As Long: pos = 1
+    Dim oPos As Long, Pos As Long: Pos = 1
     Dim rv As Long, rv1 As Long:   rv1 = -1
 Try: On Error GoTo Catch
     Dim BuffLen As Long: BuffLen = 256
@@ -421,9 +469,9 @@ Try: On Error GoTo Catch
     Loop
     'zwei aufeinanderfolgende vbNullChar finden:
     Dim n2 As String: n2 = vbNullChar & vbNullChar
-    pos = InStr(pos, StrBuff, n2)
-    If pos > 0 Then 'sollte immer etwas finden
-        StrBuff = Left$(StrBuff, pos - 1)
+    Pos = InStr(Pos, StrBuff, n2)
+    If Pos > 0 Then 'sollte immer etwas finden
+        StrBuff = Left$(StrBuff, Pos - 1)
     End If
     Dim SNamArr() As String
     SNamArr = Split(StrBuff, vbNullChar)
@@ -454,7 +502,7 @@ End Function
 Public Sub GetIniArr(aStrArr() As String, _
                      Optional ByVal aIniPFN As String, _
                      Optional ByVal aSection As String)
-    Dim rv As Long, sl As Long, pos As Long
+    Dim rv As Long, sl As Long, Pos As Long
     Dim StrBuff As String
     Dim IniPFN As String
 Try: On Error GoTo Catch
@@ -471,10 +519,10 @@ Try: On Error GoTo Catch
         BuffLen = BuffLen + BuffLen
     Loop
     'zwei aufeinanderfolgende vbNullChar finden:
-    pos = InStr(1, StrBuff, vbNullChar & vbNullChar)
+    Pos = InStr(1, StrBuff, vbNullChar & vbNullChar)
     'sollte immer etwas finden
     '-1, weil ohne das letzte vbNullChar
-    If pos > 0 Then StrBuff = Left$(StrBuff, pos - 1)
+    If Pos > 0 Then StrBuff = Left$(StrBuff, Pos - 1)
     aStrArr = Split(StrBuff, vbNullChar)
     Exit Sub
 Catch:
@@ -482,7 +530,7 @@ Catch:
 End Sub
 
 Private Sub GetSectionBuffer(ByVal aSection As String, StrBuff As String)
-    Dim rv As Long, sl As Long, pos As Long: pos = 1
+    Dim rv As Long, sl As Long, Pos As Long: Pos = 1
 Try: On Error GoTo Catch
     Dim BuffLen As Long: BuffLen = 256 '1
     Do While (sl = rv) Or (rv = 0)
@@ -491,10 +539,10 @@ Try: On Error GoTo Catch
         sl = Len(StrBuff) - 2
         BuffLen = BuffLen + BuffLen
     Loop
-    pos = InStr(pos, StrBuff, vbNullChar & vbNullChar)
+    Pos = InStr(Pos, StrBuff, vbNullChar & vbNullChar)
     'sollte immer etwas finden
     '+1, damit immer zwei vbNullChar am Ende sind
-    If pos > 0 Then StrBuff = Left$(StrBuff, pos + 1)
+    If Pos > 0 Then StrBuff = Left$(StrBuff, Pos + 1)
     Exit Sub
 Catch:
     Call ErrHandler("GetSectionBuffer")
@@ -530,86 +578,56 @@ End Function
 'End Function
 '
 Private Function CountNullCharsInBuffer(aStrBuff As String) As Long
-    Dim oPos As Long, pos As Long: pos = 1
+    'oder einfach:
+    'ConutNullChars = UBound(Split(aStrBuff, vbNullChar)) + 1
+    Dim oPos As Long, Pos As Long: Pos = 1
     Dim n As Long
 Try: On Error GoTo Catch
     Do
-        oPos = pos
-        pos = InStr(pos, aStrBuff, vbNullChar)
-        If pos > oPos + 1 Then
-            pos = pos + 1
+        oPos = Pos
+        Pos = InStr(Pos, aStrBuff, vbNullChar)
+        If Pos > oPos + 1 Then
+            Pos = Pos + 1
             n = n + 1
         Else
             Exit Do
         End If
-    Loop While pos > 0
+    Loop While Pos > 0
     CountNullCharsInBuffer = n
     Exit Function
 Catch:
     Call ErrHandler("CountNullCharsInBuffer")
 End Function
 
+'####################' v     All PrivateProfile WinAPI-W-functions     v '####################'
+'for ini reading
 Private Function GetIniInt(ByVal aSection As String, ByVal aKey As String, ByVal nDefault As Long, ByVal aFileName As String) As Long
-    If m_Unicode Then
-        GetIniInt = GetPrivateProfileIntW(StrPtr(aSection), StrPtr(aKey), nDefault, StrPtr(aFileName))
-    Else
-        GetIniInt = GetPrivateProfileIntA(aSection, aKey, nDefault, aFileName)
-    End If
+    GetIniInt = GetPrivateProfileIntW(StrPtr(aSection), StrPtr(aKey), nDefault, StrPtr(aFileName))
 End Function
-
-Private Function GetIniStr(ByVal aSection As String, ByVal aKey As String, ByVal Default As String, ByVal RetBuff As LongPtr, ByVal nSize As Long, ByVal aFileName As String) As Long
-    If m_Unicode Then
-        GetIniStr = GetPrivateProfileStringW(StrPtr(aSection), StrPtr(aKey), StrPtr(Default), RetBuff, nSize, StrPtr(aFileName))
-    Else
-        GetIniStr = GetPrivateProfileStringA(aSection, aKey, Default, RetBuff, nSize, aFileName)
-    End If
+Private Function GetIniStr(ByVal aSection As String, ByVal aKey As String, ByVal Default As String, ByRef RetBuff As String, ByVal nSize As Long, ByVal aFileName As String) As Long
+    GetIniStr = GetPrivateProfileStringW(StrPtr(aSection), StrPtr(aKey), StrPtr(Default), StrPtr(RetBuff), nSize, StrPtr(aFileName))
 End Function
-
 Private Function GetIniStruct(ByVal aSection As String, ByVal aKey As String, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal aFileName As String) As Long
-    If m_Unicode Then
-        GetIniStruct = GetPrivateProfileStructW(StrPtr(aSection), StrPtr(aKey), ByVal lpStruct, uSizeStruct, StrPtr(aFileName))
-    Else
-        GetIniStruct = GetPrivateProfileStructA(aSection, aKey, ByVal lpStruct, uSizeStruct, aFileName)
-    End If
+    GetIniStruct = GetPrivateProfileStructW(StrPtr(aSection), StrPtr(aKey), ByVal lpStruct, uSizeStruct, StrPtr(aFileName))
 End Function
-
-Private Function GetIniSection(ByVal aSection As String, ByVal aRetBuff As LongPtr, ByVal nSize As Long, ByVal aFileName As String) As Long
-    If m_Unicode Then
-        GetIniSection = GetPrivateProfileSectionW(StrPtr(aSection), aRetBuff, nSize, StrPtr(aFileName))
-    Else
-        GetIniSection = GetPrivateProfileSectionA(aSection, aRetBuff, nSize, aFileName)
-    End If
+Private Function GetIniSection(ByVal aSection As String, ByRef aRetBuff As String, ByVal nSize As Long, ByVal aFileName As String) As Long
+    GetIniSection = GetPrivateProfileSectionW(StrPtr(aSection), StrPtr(aRetBuff), nSize, StrPtr(aFileName))
 End Function
-
 Private Function GetIniSectNames(ByRef aRetBuff As String, ByVal nSize As Long, ByVal aFileName As String) As Long
-    If m_Unicode Then
-        GetIniSectNames = GetPrivateProfileSectionNamesW(StrPtr(aRetBuff), nSize, StrPtr(aFileName))
-    Else
-        GetIniSectNames = GetPrivateProfileSectionNamesA(aRetBuff, nSize, aFileName)
-    End If
+    GetIniSectNames = GetPrivateProfileSectionNamesW(StrPtr(aRetBuff), nSize, StrPtr(aFileName))
 End Function
 
+'for ini writing
 Private Function PutIniStr(ByVal aSection As String, ByVal aKey As String, ByVal lpString As String, ByVal aFileName As String) As Long
-    If m_Unicode Then
-        PutIniStr = WritePrivateProfileStringW(StrPtr(aSection), StrPtr(aKey), StrPtr(lpString), StrPtr(aFileName))
-    Else
-        PutIniStr = WritePrivateProfileStringA(aSection, aKey, lpString, aFileName)
-    End If
+    PutIniStr = WritePrivateProfileStringW(StrPtr(aSection), StrPtr(aKey), StrPtr(lpString), StrPtr(aFileName))
 End Function
 Private Function PutIniStruct(ByVal aSection As String, ByVal aKey As String, ByVal lpStruct As LongPtr, ByVal uSizeStruct As Long, ByVal aFileName As String) As Long
-    If m_Unicode Then
-        PutIniStruct = WritePrivateProfileStructW(StrPtr(aSection), StrPtr(aKey), lpStruct, uSizeStruct, StrPtr(aFileName))
-    Else
-        PutIniStruct = WritePrivateProfileStructA(aSection, aKey, lpStruct, uSizeStruct, aFileName)
-    End If
+    PutIniStruct = WritePrivateProfileStructW(StrPtr(aSection), StrPtr(aKey), lpStruct, uSizeStruct, StrPtr(aFileName))
 End Function
 Private Function PutIniSection(ByVal aSection As String, ByVal aBuffer As String, ByVal lpFileName As String) As Long
-    If m_Unicode Then
-        PutIniSection = WritePrivateProfileSectionW(StrPtr(aRetBuff), StrPtr(aBuffer), StrPtr(lpFileName))
-    Else
-        PutIniSection = WritePrivateProfileSectionA(aRetBuff, aBuffer, lpFileName)
-    End If
+    PutIniSection = WritePrivateProfileSectionW(StrPtr(aSection), StrPtr(aBuffer), StrPtr(lpFileName))
 End Function
+'####################' ^     All Private Profile WinAPI-functions     ^ '####################'
 
 '####################' v     Local ErrHandler      v '####################'
 Private Function ErrHandler(ByVal FuncName As String, _

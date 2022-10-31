@@ -1,7 +1,7 @@
 Attribute VB_Name = "MNew"
 Option Explicit
 Public Type Point2DF 'F für float
-    x As Single
+    X As Single
     Y As Single
 End Type
 Public Type SizeF
@@ -35,7 +35,7 @@ End Type              'Sum: 40
 
 Public Function Point2DF(aCtrl As Form) As Point2DF 'aCtrl As VBControlExtender
     With Point2DF
-        .x = aCtrl.Left
+        .X = aCtrl.Left
         .Y = aCtrl.Top
     End With
 End Function
@@ -53,30 +53,36 @@ Public Function PosSizeF(aCtrl As Form) As PosSizeF 'aCtrl As VBControlExtender
         .Size = SizeF(aCtrl)
     End With
 End Function
+Public Function PosSizeF_ToStr(this As PosSizeF) As String
+    Dim s As String
+    With this
+        With .Position
+            s = "PosSizeF{X=" & .X & "; Y=" & .Y & "; "
+        End With
+        With .Size
+            s = s & "Height=" & .Height & "; Width=" & .Width
+        End With
+    End With
+    PosSizeF_ToStr = s & "}"
+End Function
 
 Public Sub PosSizeToControl(aCtrl As Form, ps As PosSizeF)
-    aCtrl.Move ps.Position.x, ps.Position.Y, ps.Size.Width, ps.Size.Height
+    aCtrl.Move ps.Position.X, ps.Position.Y, ps.Size.Width, ps.Size.Height
 End Sub
 
-Public Function ConfigIniDocument(aPFN As PathFileName, Optional ByVal bUnicode As Boolean = False) As ConfigIniDocument
-    Set ConfigIniDocument = New ConfigIniDocument: ConfigIniDocument.New_ aPFN, bUnicode
+Public Function ConfigIniDocument(aPFN As PathFileName) As ConfigIniDocument
+    Set ConfigIniDocument = New ConfigIniDocument: ConfigIniDocument.New_ aPFN
 End Function
 
-Public Function ConfigIniSection(aIniFile As ConfigIniDocument, ByVal aSectionName As String) As ConfigIniSection
-    Set ConfigIniSection = New ConfigIniSection: ConfigIniSection.New_ aIniFile, aSectionName
+Public Function ConfigIniSection(IniFile As ConfigIniDocument, ByVal SectionName As String) As ConfigIniSection
+    Set ConfigIniSection = New ConfigIniSection: ConfigIniSection.New_ IniFile, SectionName
 End Function
 
-Public Function ConfigIniKeyValue(aIniFile As ConfigIniDocument, _
-                                  aSection As ConfigIniSection, _
-                                  aKeyName As String, _
-                                  Optional VarDefault As Variant) As ConfigIniKeyValue
-    Set ConfigIniKeyValue = New ConfigIniKeyValue: ConfigIniKeyValue.New_ aIniFile, aSection, aKeyName, VarDefault
+Public Function ConfigIniKeyValue(IniFile As ConfigIniDocument, Section As ConfigIniSection, ByVal KeyName As String, Optional VarDefault As Variant) As ConfigIniKeyValue
+    Set ConfigIniKeyValue = New ConfigIniKeyValue: ConfigIniKeyValue.New_ IniFile, Section, KeyName, VarDefault
 End Function
 
-Public Function ConfigIniKeyValueS(aIniFile As ConfigIniDocument, _
-                                   aSection As String, _
-                                   aKeyName As String, _
-                                   Optional VarDefault As Variant) As ConfigIniKeyValue
+Public Function ConfigIniKeyValueS(IniFile As ConfigIniDocument, ByVal Section As String, ByVal KeyName As String, Optional VarDefault As Variant) As ConfigIniKeyValue
     Set ConfigIniKeyValueS = New ConfigIniKeyValue: ConfigIniKeyValueS.NewS aIniFile, aSection, aKeyName, VarDefault
 End Function
 
