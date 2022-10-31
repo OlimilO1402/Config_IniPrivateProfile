@@ -116,167 +116,130 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Private IniPFN  As PathFileName 'String
 Private IniFile As ConfigIniDocument
 
 Private Sub Form_Load()
     Me.Caption = Me.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
-    Set IniPFN = MNew.PathFileName(Environ("Temp") & "\Test.ini")
-    Set IniFile = MNew.ConfigIniDocument(IniPFN)
-    Label1.Caption = IniPFN.Value
+End Sub
+
+Private Sub UpdateView()
+    
+    Label1.Caption = IniFile.pfn.Value
+    Text1.Text = IniFile.pfn.ReadAllStr
+    IniFile.pfn.CloseFile
+    
 End Sub
 
 Private Sub BtnTestWriteAtOnce_Click()
-    Dim FNm As String: FNm = App.Path & "\mynewini.ini"
-    Label1.Caption = FNm
-    Dim ini As ConfigIniDocument: Set ini = MNew.ConfigIniDocument(MNew.PathFileName(FNm))
-    Dim aSection As String, aKey As String
-    aSection = "SectionOne"
-    aKey = "FirstValue":  ini.ValueBol(aSection, aKey, False) = True
-    aKey = "SecondValue": ini.ValueInt(aSection, aKey, 0) = 123456
-    aSection = "SectionTwo"
-    aKey = "ThirdValue":  ini.ValueStr(aSection, aKey, "Null") = "Eins"
-    Dim p As PosSizeF: p = MNew.PosSizeF(Me)
-    Dim rv As Long
-    aKey = "FourthValue":  ini.ValueStructP(aSection, aKey, LenB(p), VarPtr(p)) = rv
-    'Debug.Print rv
-    Dim s As String: s = ini.pfn.ReadAllStr: ini.pfn.CloseFile
-    Text1.Text = s 'IIf(ini.FileIsUnicode, StrConv(s, vbFromUnicode), s)
-    'ini.pfn.OpenFileExplorer
+    
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\mynewini.ini"))
+    
+    Dim SectionName As String, KeyValueName As String
+    SectionName = "SectionOne"
+    KeyValueName = "FirstValue":  IniFile.ValueBol(SectionName, KeyValueName, False) = True
+    KeyValueName = "SecondValue": IniFile.ValueInt(SectionName, KeyValueName, 0) = 123456
+    
+    SectionName = "SectionTwo"
+    KeyValueName = "ThirdValue":  IniFile.ValueStr(SectionName, KeyValueName, "Null") = "Eins"
+    Dim rv As Long, p As PosSizeF: p = MNew.PosSizeF(Me)
+    KeyValueName = "FourthValue":  IniFile.ValueStructP(SectionName, KeyValueName, LenB(p), VarPtr(p)) = rv
+    
+    UpdateView
+    
 End Sub
-Private Sub BtnTestReadAtOnce_Click()
-    Text1.Text = ""
-    Dim T As String
-    Dim ini As ConfigIniDocument: Set ini = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\mynewini.ini"))
-    Dim p As PosSizeF: Dim rv As Long
-    Dim aSection As String, aKey As String
-    aSection = "SectionOne"
-    T = T & "[" & aSection & "]" & vbCrLf
-    aKey = "FirstValue":  Dim b As Boolean: b = ini.ValueBol(aSection, aKey, False):    T = T & aKey & " = " & b & vbCrLf
-    aKey = "SecondValue": Dim i As Long:    i = ini.ValueInt(aSection, aKey, 1):        T = T & aKey & " = " & i & vbCrLf
-    
-    aSection = "SectionTwo"
-    T = T & "[" & aSection & "]" & vbCrLf
-    aKey = "ThirdValue":  Dim s As String:  s = ini.ValueStr(aSection, aKey, "Null"):   T = T & aKey & " = " & s & vbCrLf
-    aKey = "FourthValue": rv = ini.ValueStructP(aSection, aKey, LenB(p), VarPtr(p)):    T = T & aKey & " = " & MNew.PosSizeF_ToStr(p) & vbCrLf
 
-    Dim secnms As Collection: Set secnms = ini.SectionNamesToCol
+Private Sub BtnTestReadAtOnce_Click()
+    
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\mynewini.ini"))
+    Dim p As PosSizeF, rv As Long, txt As String
+    Dim SectionName As String, KeyValueName As String
+    SectionName = "SectionOne"
+    txt = txt & "[" & SectionName & "]" & vbCrLf
+    KeyValueName = "FirstValue":  Dim b As Boolean: b = IniFile.ValueBol(SectionName, KeyValueName, False):    txt = txt & KeyValueName & " = " & b & vbCrLf
+    KeyValueName = "SecondValue": Dim i As Long:    i = IniFile.ValueInt(SectionName, KeyValueName, 1):        txt = txt & KeyValueName & " = " & i & vbCrLf
+    
+    SectionName = "SectionTwo"
+    txt = txt & "[" & SectionName & "]" & vbCrLf
+    KeyValueName = "ThirdValue":  Dim s As String:  s = IniFile.ValueStr(SectionName, KeyValueName, "Null"):   txt = txt & KeyValueName & " = " & s & vbCrLf
+    KeyValueName = "FourthValue":  rv = IniFile.ValueStructP(SectionName, KeyValueName, LenB(p), VarPtr(p)):   txt = txt & KeyValueName & " = " & MNew.PosSizeF_ToStr(p) & vbCrLf
+    
+    Dim SectionNames As Collection: Set SectionNames = IniFile.SectionNamesToCol
     Dim v
-    For Each v In secnms
-        T = T & v & vbCrLf
+    For Each v In SectionNames
+        txt = txt & v & vbCrLf
     Next
-    Dim iarr() As String
     
-    ini.GetIniArr iarr, , aSection
+    Dim iarr() As String: IniFile.GetIniArr iarr, , SectionName
     
-    'Dim i As Long
     For i = 0 To UBound(iarr)
         v = iarr(i)
-        T = T & v & vbCrLf
+        txt = txt & v & vbCrLf
     Next
     
-'    Dim iniSec As ConfigIniSection: Set iniSec = MNew.ConfigIniSection(ini, aSection)
-'    Dim kvs As Collection: Set kvs = iniSec.StrKeyValsToCol
-'    For Each v In kvs
-'        T = T & v & vbCrLf
-'    Next
-    Text1.Text = T
-End Sub
-
-Private Sub BtnTestVBP_Click()
-    Dim pfn As PathFileName: Set pfn = MNew.PathFileName(App.Path & "\PConfigIni_vbp.ini")
-    If Not pfn.Exists Then
-        MsgBox "File does not exist:" & vbCrLf & pfn.Value
-    End If
-    Dim cid As ConfigIniDocument: Set cid = MNew.ConfigIniDocument(pfn)
-    cid.Load
-    Dim i As Long, u As Long
-    Dim s As String, cikv As ConfigIniKeyValue
+    UpdateView
+    Text1.Text = Text1.Text & txt
     
-    Dim classes As ConfigIniSection: Set classes = cid.Root.Filter("Class")
-    u = classes.KeyValues.Count - 1
-    For i = 0 To u
-        Set cikv = classes.KeyValues.Item(i)
-        s = s & cikv.Value & vbCrLf
-    Next
-    
-    s = s & vbCrLf
-    
-    Dim modules As ConfigIniSection: Set modules = cid.Root.Filter("Module")
-    u = modules.KeyValues.Count - 1
-    For i = 0 To u
-        Set cikv = modules.KeyValues.Item(i)
-        s = s & cikv.Value & vbCrLf
-    Next
-    
-    s = s & vbCrLf
-    
-    Dim forms As ConfigIniSection: Set forms = cid.Root.Filter("Form")
-    u = forms.KeyValues.Count - 1
-    For i = 0 To u
-        Set cikv = forms.KeyValues.Item(i)
-        s = s & cikv.Value & vbCrLf
-    Next
-    
-    Text1.Text = s
-
 End Sub
 
 Private Sub BtnReadIniFile_Click()
     'read Ini-file and display it
-    'Dim IniFile As ConfigIniDocument: Set IniFile = MNew.ConfigIniDocument(IniFileName)
+    'Dim IniFile As ConfigIniDocument:
     'Call IniFile.Load
-    If Not IniPFN.Exists Then
-        If MsgBox("Inifile does not exist, write it first?" & vbCrLf & IniPFN.Value, vbOKCancel) = vbCancel Then Exit Sub
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
+    
+    If Not IniFile.pfn.Exists Then
+        If MsgBox("Inifile does not exist, write it first?" & vbCrLf & IniFile.pfn.Value, vbOKCancel) = vbCancel Then Exit Sub
         BtnWriteIniFile_Click
     End If
     If IniFile Is Nothing Then
-        Set IniFile = MNew.ConfigIniDocument(IniPFN):
+        Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini")):
     End If
     IniFile.Load
-    Text1.Text = IniFile.ToStr
+    'Text1.Text = IniFile.ToStr
+    UpdateView
 End Sub
 
 Private Sub BtnWriteIniFile_Click()
-    
-    Dim Section As ConfigIniSection
-    Dim KyValue As ConfigIniKeyValue
-    Dim sec     As String
-    Dim Key     As String
-    Dim val     As String
     
     'directly write some values to the Ini-file
     'by using the functions ValueStr, ValueBol & ValueInt you can
     'immediately write to the Ini-file
     'these function you will find in the class ConfigIniDocument
     'as well as in the class ConfigIniKeyValue
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
+    Dim SectionName  As String
+    Dim KeyValueName As String
+    Dim Value        As String
+    Dim Section  As ConfigIniSection
+    Dim KeyValue As ConfigIniKeyValue
     
-    sec = "TestReadWriteAtOnce"
-    Key = "FirstEntry"
-    IniFile.ValueStr(sec, Key, "") = "NewValueOfFirstEntry"
+    SectionName = "TestReadWriteAtOnce"
+    KeyValueName = "FirstEntry"
+    
+    IniFile.ValueStr(SectionName, KeyValueName, "") = "NewValueOfFirstEntry"
     
     'read from ini file what we have written:
-    val = IniFile.ValueStr(sec, Key, "")
-    MsgBox "The read value is: " & val
+    Value = IniFile.ValueStr(SectionName, KeyValueName, "")
+    MsgBox "The read value is: " & Value
     
-    sec = "TestSection1"
-    Set Section = IniFile.AddSection(sec)
+    SectionName = "TestSection1"
+    Set Section = IniFile.AddSection(SectionName)
     
-    Key = "FirstEntry"
-    Set KyValue = Section.AddKeyValue(Key)
-    KyValue.ValueInt = 123456
+    KeyValueName = "FirstEntry"
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
+    KeyValue.ValueInt = 123456
     
-    Key = "SecondEntry"
-    Set KyValue = Section.AddKeyValue(Key)
-    KyValue.ValueInt = 456789
+    KeyValueName = "SecondEntry"
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
+    KeyValue.ValueInt = 456789
     
     'it's also possible to write UD-Type-variables at once:
-    Key = "Form1PositionAndSize"
-    Set KyValue = Section.AddKeyValue(Key)
+    KeyValueName = "Form1PositionAndSize"
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
     
     Dim cs As PosSizeF: cs = MNew.PosSizeF(Me)
     Dim rv As Long
-    KyValue.ValueStructP(LenB(cs), VarPtr(cs)) = VarPtr(cs)
+    KeyValue.ValueStructP(LenB(cs), VarPtr(cs)) = VarPtr(cs)
     
     Dim tt As TestTyp1
     With tt
@@ -288,39 +251,40 @@ Private Sub BtnWriteIniFile_Click()
         .StrVal = "Test Entry"
     End With
     
-    Key = "tt_As_TestTyp"
-    Set KyValue = Section.AddKeyValue(Key)
+    KeyValueName = "tt_As_TestTyp"
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
     
-    KyValue.ValueStructP(LenB(tt), VarPtr(tt)) = VarPtr(tt)
+    KeyValue.ValueStructP(LenB(tt), VarPtr(tt)) = VarPtr(tt)
     
     'write a value yourself
-    Key = "MyEntry"
-    Set KyValue = Section.AddKeyValue(Key)
-    val = InputBox("Write a value yourself: ", "Me too", "hoho")
-    If Not (Len(val) = 0) Then
-        KyValue.ValueStr = val
+    KeyValueName = "MyEntry"
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
+    Value = InputBox("Write a value yourself: ", "Me too", "hoho")
+    If Not (Len(Value) = 0) Then
+        KeyValue.ValueStr = Value
     End If
-    
+    UpdateView
 End Sub
 
 Private Sub BtnReadRawIniData_Click()
-    If IniPFN Is Nothing Then Set IniPFN = MNew.PathFileName(Environ("Temp") & "\Test.ini")
-    If Not IniPFN.Exists Then
-        MsgBox "File does not exist, write inifile first."
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
+    If Not IniFile.pfn.Exists Then
+        MsgBox "File does not exist, write inifile first!"
         Exit Sub
     End If
-    Text1.Text = IniPFN.ReadAllStr
-    IniPFN.CloseFile
+    UpdateView
 End Sub
 
 Private Sub BtnDeleteIniFile_Click()
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
 Try: On Error GoTo Catch
-    IniPFN.Delete
+    IniFile.pfn.Delete
 Catch:
 End Sub
 
 Private Sub BtnWriteWindowPosSize_Click()
-    'Dim IniFile As ConfigIniDocument: Set IniFile = MNew.ConfigIniDocument(IniFileName): IniFile.Load
+    
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini")): IniFile.Load
     Dim Section As ConfigIniSection:  Set Section = IniFile.Section("TestSection1")
     
     Dim Key As String: Key = "Form1PositionAndSize"
@@ -336,17 +300,57 @@ Private Sub BtnSetWindowPosSize_Click()
     'Dim IniFile As ConfigIniDocument: Set IniFile = MNew.ConfigIniDocument(IniFileName): IniFile.Load
     Dim Section As ConfigIniSection:  Set Section = IniFile.Section("TestSection1")
     
-    Dim Key As String: Key = "Form1PositionAndSize"
-    Dim KyValue As ConfigIniKeyValue: Set KyValue = Section.AddKeyValue(Key)
+    Dim KeyName  As String: KeyName = "Form1PositionAndSize"
+    Dim KeyValue As ConfigIniKeyValue: Set KeyValue = Section.AddKeyValue(KeyName)
     
     Dim cs As PosSizeF
     
-    Dim rv As Long: rv = KyValue.ValueStructP(LenB(cs), VarPtr(cs))
+    Dim rv As Long: rv = KeyValue.ValueStructP(LenB(cs), VarPtr(cs))
     
     With cs
         Me.WindowState = FormWindowStateConstants.vbNormal
         Me.Move .Position.X, .Position.Y, .Size.Width, .Size.Height
     End With
+End Sub
+
+Private Sub BtnTestVBP_Click()
+    
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\PConfigIni.vbp"))
+    If Not IniFile.pfn.Exists Then
+        MsgBox "File does not exist, write inifile first:" & vbCrLf & IniFile.pfn.Value
+        Exit Sub
+    End If
+    IniFile.Load
+    Dim i As Long, u As Long
+    Dim s As String, cikv As ConfigIniKeyValue
+    
+    Dim classes As ConfigIniSection: Set classes = IniFile.Root.Filter("Class")
+    u = classes.KeyValues.Count - 1
+    For i = 0 To u
+        Set cikv = classes.KeyValues.Item(i)
+        s = s & cikv.Value & vbCrLf
+    Next
+    
+    s = s & vbCrLf
+    
+    Dim modules As ConfigIniSection: Set modules = IniFile.Root.Filter("Module")
+    u = modules.KeyValues.Count - 1
+    For i = 0 To u
+        Set cikv = modules.KeyValues.Item(i)
+        s = s & cikv.Value & vbCrLf
+    Next
+    
+    s = s & vbCrLf
+    
+    Dim forms As ConfigIniSection: Set forms = IniFile.Root.Filter("Form")
+    u = forms.KeyValues.Count - 1
+    For i = 0 To u
+        Set cikv = forms.KeyValues.Item(i)
+        s = s & cikv.Value & vbCrLf
+    Next
+    UpdateView
+    Text1.Text = Text1.Text & vbCrLf & "##############################" & vbCrLf & s
+
 End Sub
 
 Private Sub Form_Resize()
