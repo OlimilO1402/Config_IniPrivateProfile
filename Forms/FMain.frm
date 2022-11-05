@@ -15,7 +15,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   8160
       TabIndex        =   8
-      Top             =   480
+      Top             =   360
       Width           =   1575
    End
    Begin VB.CommandButton BtnDeleteIniFile 
@@ -23,7 +23,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   6600
       TabIndex        =   7
-      Top             =   840
+      Top             =   720
       Width           =   1575
    End
    Begin VB.CommandButton BtnReadRawIniData 
@@ -31,7 +31,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   6600
       TabIndex        =   6
-      Top             =   480
+      Top             =   360
       Width           =   1575
    End
    Begin VB.CommandButton BtnSetWindowPosSize 
@@ -39,7 +39,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   3480
       TabIndex        =   5
-      Top             =   840
+      Top             =   720
       Width           =   3135
    End
    Begin VB.CommandButton BtnWriteWindowPosSize 
@@ -47,7 +47,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   3480
       TabIndex        =   4
-      Top             =   480
+      Top             =   360
       Width           =   3135
    End
    Begin VB.CommandButton BtnReadIniFile 
@@ -55,7 +55,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   1920
       TabIndex        =   3
-      Top             =   840
+      Top             =   720
       Width           =   1575
    End
    Begin VB.CommandButton BtnWriteIniFile 
@@ -63,7 +63,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   1920
       TabIndex        =   2
-      Top             =   480
+      Top             =   360
       Width           =   1575
    End
    Begin VB.CommandButton BtnTestReadAtOnce 
@@ -71,7 +71,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   120
       TabIndex        =   1
-      Top             =   840
+      Top             =   720
       Width           =   1815
    End
    Begin VB.CommandButton BtnTestWriteAtOnce 
@@ -79,7 +79,7 @@ Begin VB.Form FMain
       Height          =   375
       Left            =   120
       TabIndex        =   0
-      Top             =   480
+      Top             =   360
       Width           =   1815
    End
    Begin VB.TextBox Text1 
@@ -99,7 +99,8 @@ Begin VB.Form FMain
       OLEDropMode     =   1  'Manuell
       ScrollBars      =   3  'Beides
       TabIndex        =   10
-      Top             =   1320
+      ToolTipText     =   "Drag'n'drop ini files here"
+      Top             =   1200
       Width           =   9735
    End
    Begin VB.Label Label1 
@@ -136,7 +137,7 @@ End Sub
 Private Sub UpdateView()
     
     Label1.Caption = IniFile.pfn.Value
-    Text1.Text = IniFile.pfn.ReadAllStr
+    Text1.Text = IniFile.pfn.ReadAllText
     IniFile.pfn.CloseFile
     
 End Sub

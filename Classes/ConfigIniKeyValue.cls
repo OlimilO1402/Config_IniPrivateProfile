@@ -32,26 +32,26 @@ Friend Sub New_(aIniFile As ConfigIniDocument, _
 End Sub
 
 'Copy to MNew:
-'Public Function ConfigIniKeyValue(aIniFile As ConfigIniDocument, _
-'                                  aSection As ConfigIniSection, _
-'                                  aKeyName As String, _
+'Public Function ConfigIniKeyValue(IniFile As ConfigIniDocument, _
+'                                  Section As ConfigIniSection, _
+'                                  KeyName As String, _
 '                                  Optional VarDefault As Variant) As ConfigIniKeyValue
-'    Set ConfigIniKeyValue = New ConfigIniKeyValue: ConfigIniKeyValue.New_ aIniFile, aSection, aKeyName, VarDefault
+'    Set ConfigIniKeyValue = New ConfigIniKeyValue: ConfigIniKeyValue.New_ IniFile, Section, KeyName, VarDefault
 'End Function
 'Copy to MNew:
-'Public Function ConfigIniKeyValueS(aIniFile As ConfigIniDocument, _
-'                                   aSection As String, _
-'                                   aKeyName As String, _
+'Public Function ConfigIniKeyValueS(IniFile As ConfigIniDocument, _
+'                                   SectionName As String, _
+'                                   KeyName As String, _
 '                                   Optional VarDefault As Variant) As ConfigIniKeyValue
-'    Set ConfigIniKeyValueS = New ConfigIniKeyValue: ConfigIniKeyValueS.NewS aIniFile, aSection, aKeyName, VarDefault
+'    Set ConfigIniKeyValueS = New ConfigIniKeyValue: ConfigIniKeyValueS.NewS IniFile, SectionName, KeyName, VarDefault
 'End Function
 
-Friend Sub NewS(aIniFile As ConfigIniDocument, _
-                aSection As String, _
-                aKeyName As String, _
+Friend Sub NewS(IniFile As ConfigIniDocument, _
+                SectionName As String, _
+                KeyName As String, _
                 Optional VarDefault As Variant)
-    Set m_IniFile = aIniFile: Set m_Section = MNew.ConfigIniSection(aIniFile, aSection)
-    m_KeyName = aKeyName: m_Default = VarDefault: m_Value = ValueStr
+    Set m_IniFile = IniFile: Set m_Section = MNew.ConfigIniSection(IniFile, SectionName)
+    m_KeyName = KeyName: m_Default = VarDefault ': m_Value = ValueStr
 End Sub
 
 Friend Sub NewC(other As ConfigIniKeyValue)

@@ -47,16 +47,15 @@ Private m_StrSave  As String 'Zwischenspeicher für den letzten Stand der IniDate
 Private m_TempKey  As ConfigIniKeyValue
 
 Private Sub Class_Initialize()
-    'Set m_Root = MNew.ConfigIniSection(Me, vbNullString)
     Set m_Sections = MNew.List(vbObject, , True)
 End Sub
 
-Friend Sub New_(aPFN As PathFileName, Optional ByVal bUnicode As Boolean = False)
-    Set m_PFN = aPFN: m_PFName = m_PFN.Value ': m_Unicode = bUnicode
+Friend Sub New_(PFN As PathFileName)
+    Set m_PFN = PFN: m_PFName = m_PFN.Value
 End Sub
 'Copy to MNew:
-'Public Function ConfigIniDocument(aPFN As PathFileName, Optional ByVal bUnicode As Boolean = False) As ConfigIniDocument
-'    Set ConfigIniDocument = New ConfigIniDocument: ConfigIniDocument.New_ aPFN, bUnicode
+'Public Function ConfigIniDocument(PFN As PathFileName) As ConfigIniDocument
+'    Set ConfigIniDocument = New ConfigIniDocument: ConfigIniDocument.New_ PFN
 'End Function
 
 Friend Sub NewC(other As ConfigIniDocument)
@@ -92,8 +91,8 @@ Public Property Get FileName() As String
     FileName = m_PFName
 End Property
 
-Public Property Get pfn() As PathFileName
-    Set pfn = m_PFN
+Public Property Get PFN() As PathFileName
+    Set PFN = m_PFN
 End Property
 
 Public Property Get IsLoaded() As Boolean
