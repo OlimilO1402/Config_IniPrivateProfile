@@ -46,12 +46,16 @@ Private m_Sections As List 'Of ConfigIniSection  'hashed
 Private m_StrSave  As String 'Zwischenspeicher für den letzten Stand der IniDatei
 Private m_TempKey  As ConfigIniKeyValue
 
+#If False Then
+    Value, PFN
+#End If
+
 Private Sub Class_Initialize()
     Set m_Sections = MNew.List(vbObject, , True)
 End Sub
 
-Friend Sub New_(PFN As PathFileName)
-    Set m_PFN = PFN: m_PFName = m_PFN.Value
+Friend Sub New_(pfn As PathFileName)
+    Set m_PFN = pfn: m_PFName = m_PFN.Value
 End Sub
 'Copy to MNew:
 'Public Function ConfigIniDocument(PFN As PathFileName) As ConfigIniDocument
@@ -91,8 +95,8 @@ Public Property Get FileName() As String
     FileName = m_PFName
 End Property
 
-Public Property Get PFN() As PathFileName
-    Set PFN = m_PFN
+Public Property Get pfn() As PathFileName
+    Set pfn = m_PFN
 End Property
 
 Public Property Get IsLoaded() As Boolean
@@ -135,6 +139,7 @@ Public Sub Load()
             End If
         End If
     Loop
+    m_PFN.CloseFile
 End Sub
 
 Private Sub LoadNormalIni()
@@ -257,8 +262,8 @@ End Property
 'Pass the array ByRef, the return-value is the numer of items in the array
 Public Property Let ValueStrArr(ByVal aSection As String, strArr() As String, RetVal As Long)
 Try: On Error GoTo Catch
-    Dim buffer As String ', i As Long
-    buffer = Join(strArr, vbNullChar)
+    Dim Buffer As String ', i As Long
+    Buffer = Join(strArr, vbNullChar)
     'Hey, warum nicht join verwenden?
     'Dim L As Long: L = LBound(strArr)
     Dim u As Long: u = UBound(strArr)
@@ -269,7 +274,7 @@ Try: On Error GoTo Catch
     'Zuerst die Section komplett löschen, denn falls sie vorher länger gewesen wäre würde sonst nur ein Teil überschrieben werden.
     Dim rv As Long
     rv = PutIniStr(aSection, vbNullString, vbNullString, m_PFName)
-    rv = PutIniSection(aSection, buffer, m_PFName)
+    rv = PutIniSection(aSection, Buffer, m_PFName)
     RetVal = u + 1
     Exit Property
 Catch:
@@ -279,18 +284,18 @@ Public Property Get ValueStrArr(ByVal aSection As String, strArr() As String) As
 Try: On Error GoTo Catch
     Dim StrBuff As String: Call GetSectionBuffer(aSection, StrBuff)
     Dim i As Long, n As Long
-    Dim Pos As Long: Pos = 1
-    Dim oPos As Long: oPos = Pos
+    Dim pos As Long: pos = 1
+    Dim oPos As Long: oPos = pos
     If Len(StrBuff) > 0 Then
         'String mit Trennzeichen Chr$(0) in ein Feld umwandeln
         n = CountNullCharsInBuffer(StrBuff)
         ReDim strArr(0 To n - 1)
         For i = 0 To n - 1
-            Pos = InStr(oPos, StrBuff, vbNullChar)
-            If Pos > 0 Then
-                strArr(i) = Mid$(StrBuff, oPos, Pos - oPos)
+            pos = InStr(oPos, StrBuff, vbNullChar)
+            If pos > 0 Then
+                strArr(i) = Mid$(StrBuff, oPos, pos - oPos)
             End If
-            oPos = Pos + 1
+            oPos = pos + 1
         Next
     End If
     ValueStrArr = n
@@ -395,7 +400,7 @@ End Property
 Public Property Get SectionNamesToCol() As Collection
     Set SectionNamesToCol = New Collection
     Dim StrBuff As String
-    Dim oPos As Long, Pos As Long: Pos = 1
+    Dim oPos As Long, pos As Long: pos = 1
     Dim rv As Long, rv1 As Long:   rv1 = -1
 Try: On Error GoTo Catch
     Dim BuffLen As Long: BuffLen = 256
@@ -408,9 +413,9 @@ Try: On Error GoTo Catch
     Loop
     'zwei aufeinanderfolgende vbNullChar finden:
     Dim n2 As String: n2 = vbNullChar & vbNullChar
-    Pos = InStr(Pos, StrBuff, n2)
-    If Pos > 0 Then 'sollte immer etwas finden
-        StrBuff = Left$(StrBuff, Pos - 1)
+    pos = InStr(pos, StrBuff, n2)
+    If pos > 0 Then 'sollte immer etwas finden
+        StrBuff = Left$(StrBuff, pos - 1)
     End If
     Dim SNamArr() As String
     SNamArr = Split(StrBuff, vbNullChar)
@@ -442,13 +447,13 @@ End Function
 Public Sub GetIniArr(aStrArr() As String, _
                      Optional ByVal aIniPFN As String, _
                      Optional ByVal aSection As String)
-    Dim rv As Long, sl As Long, Pos As Long
+    Dim rv As Long, sl As Long, pos As Long
     Dim StrBuff As String
     Dim IniPFN As String
 Try: On Error GoTo Catch
     If Len(aIniPFN) Then IniPFN = aIniPFN Else IniPFN = m_PFName
     Dim BuffLen As Long: BuffLen = 256 '1
-    Do While (sl = rv) Or (rv = 0)
+    Do While (sl = rv) 'Or (rv = 0)
         StrBuff = String$(BuffLen, vbNullChar)
         If Len(aSection) Then
             rv = GetIniSection(aSection, StrBuff, BuffLen, IniPFN)
@@ -459,18 +464,18 @@ Try: On Error GoTo Catch
         BuffLen = BuffLen + BuffLen
     Loop
     'zwei aufeinanderfolgende vbNullChar finden:
-    Pos = InStr(1, StrBuff, vbNullChar & vbNullChar)
+    pos = InStr(1, StrBuff, vbNullChar & vbNullChar)
     'sollte immer etwas finden
     '-1, weil ohne das letzte vbNullChar
-    If Pos > 0 Then StrBuff = Left$(StrBuff, Pos - 1)
+    If pos > 0 Then StrBuff = Left$(StrBuff, pos - 1)
     aStrArr = Split(StrBuff, vbNullChar)
     Exit Sub
 Catch:
-    Call ErrHandler("GetIniArr")
+    Call ErrHandler("GetIniArr", aSection)
 End Sub
 
 Private Sub GetSectionBuffer(ByVal aSection As String, StrBuff As String)
-    Dim rv As Long, sl As Long, Pos As Long: Pos = 1
+    Dim rv As Long, sl As Long, pos As Long: pos = 1
 Try: On Error GoTo Catch
     Dim BuffLen As Long: BuffLen = 256 '1
     Do While (sl = rv) Or (rv = 0)
@@ -479,10 +484,10 @@ Try: On Error GoTo Catch
         sl = Len(StrBuff) - 2
         BuffLen = BuffLen + BuffLen
     Loop
-    Pos = InStr(Pos, StrBuff, vbNullChar & vbNullChar)
+    pos = InStr(pos, StrBuff, vbNullChar & vbNullChar)
     'sollte immer etwas finden
     '+1, damit immer zwei vbNullChar am Ende sind
-    If Pos > 0 Then StrBuff = Left$(StrBuff, Pos + 1)
+    If pos > 0 Then StrBuff = Left$(StrBuff, pos + 1)
     Exit Sub
 Catch:
     Call ErrHandler("GetSectionBuffer")
@@ -527,19 +532,19 @@ End Function
 Private Function CountNullCharsInBuffer(aStrBuff As String) As Long
     'oder einfach:
     'ConutNullChars = UBound(Split(aStrBuff, vbNullChar)) + 1
-    Dim oPos As Long, Pos As Long: Pos = 1
+    Dim oPos As Long, pos As Long: pos = 1
     Dim n As Long
 Try: On Error GoTo Catch
     Do
-        oPos = Pos
-        Pos = InStr(Pos, aStrBuff, vbNullChar)
-        If Pos > oPos + 1 Then
-            Pos = Pos + 1
+        oPos = pos
+        pos = InStr(pos, aStrBuff, vbNullChar)
+        If pos > oPos + 1 Then
+            pos = pos + 1
             n = n + 1
         Else
             Exit Do
         End If
-    Loop While Pos > 0
+    Loop While pos > 0
     CountNullCharsInBuffer = n
     Exit Function
 Catch:

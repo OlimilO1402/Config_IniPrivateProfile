@@ -10,6 +10,35 @@ Begin VB.Form FMain
    ScaleHeight     =   5895
    ScaleWidth      =   9855
    StartUpPosition =   3  'Windows-Standard
+   Begin VB.TextBox Text2 
+      BeginProperty Font 
+         Name            =   "Consolas"
+         Size            =   9.75
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      Height          =   4455
+      Left            =   4800
+      MultiLine       =   -1  'True
+      OLEDragMode     =   1  'Automatisch
+      OLEDropMode     =   1  'Manuell
+      ScrollBars      =   3  'Beides
+      TabIndex        =   12
+      ToolTipText     =   "Drag'n'drop *.ini- or *.vbp-files here"
+      Top             =   1200
+      Width           =   4935
+   End
+   Begin VB.CommandButton BtnOpenIni 
+      Caption         =   "Open Ini"
+      Height          =   375
+      Left            =   8160
+      TabIndex        =   11
+      Top             =   720
+      Width           =   1575
+   End
    Begin VB.CommandButton BtnTestVBP 
       Caption         =   "Test VBP"
       Height          =   375
@@ -99,9 +128,9 @@ Begin VB.Form FMain
       OLEDropMode     =   1  'Manuell
       ScrollBars      =   3  'Beides
       TabIndex        =   10
-      ToolTipText     =   "Drag'n'drop ini files here"
+      ToolTipText     =   "Drag'n'drop *.ini- or *.vbp-files here"
       Top             =   1200
-      Width           =   9735
+      Width           =   4815
    End
    Begin VB.Label Label1 
       AutoSize        =   -1  'True
@@ -131,15 +160,24 @@ Private Sub Form_Resize()
     Dim T As Single: T = Text1.Top
     Dim W As Single: W = Me.ScaleWidth
     Dim H As Single: H = Me.ScaleHeight - T
-    If W > 0 And H > 0 Then Text1.Move L, T, W, H
+    If W > 0 And H > 0 Then
+        Text1.Move L, T, W / 2, H
+        Text2.Move W / 2, T, W / 2, H
+    End If
 End Sub
 
 Private Sub UpdateView()
-    
+Try: On Error GoTo Catch
+    Text1.Text = vbNullString
+    Text2.Text = vbNullString
     Label1.Caption = IniFile.pfn.Value
     Text1.Text = IniFile.pfn.ReadAllText
+    IniFile.Load
+    Text2.Text = IniFile.ToStr
     IniFile.pfn.CloseFile
-    
+    Exit Sub
+Catch:
+    ErrHandler "UpdateView"
 End Sub
 
 Private Sub BtnTestWriteAtOnce_Click()
@@ -348,7 +386,12 @@ End Sub
 
 Private Sub BtnTestVBP_Click()
     
-    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\PConfigIni.vbp"))
+    TestVBP App.Path & "\PConfigIni.vbp"
+    
+End Sub
+
+Sub TestVBP(sPfnVBP As String)
+    Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(sPfnVBP))
     If Not IniFile.pfn.Exists Then
         MsgBox "File not found:" & vbCrLf & IniFile.pfn.Value
         Exit Sub
@@ -383,16 +426,73 @@ Private Sub BtnTestVBP_Click()
     Next
     UpdateView
     Text1.Text = Text1.Text & vbCrLf & "##############################" & vbCrLf & s
-
+End Sub
+Private Sub Text1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
+    TBOLEDragDrop Text1, Data, Effect, Button, Shift, X, Y
 End Sub
 
-Private Sub Text1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub Text2_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
+    TBOLEDragDrop Text2, Data, Effect, Button, Shift, X, Y
+End Sub
+
+Sub TBOLEDragDrop(TB As TextBox, Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
     If Not Data.GetFormat(ClipBoardConstants.vbCFFiles) Then Exit Sub
-    Dim pfn As PathFileName
     If Data.Files.Count = 0 Then Exit Sub
-    Set pfn = MNew.PathFileName(Data.Files.Item(1))
+    Dim s As String: s = Data.Files.Item(1)
+    If Len(s) = 0 Then
+        MsgBox "String is not a valid filename"
+        Exit Sub
+    End If
+    Dim pfn As PathFileName: Set pfn = MNew.PathFileName(s)
+    Dim ext As String: ext = LCase(pfn.Extension)
+    If ext = ".ini" Then
+        CreateIni s
+    ElseIf ext = ".vbp" Then
+        TestVBP s
+    End If
+End Sub
+
+Private Sub BtnOpenIni_Click()
+    Dim OFD As OpenFileDialog: Set OFD = New OpenFileDialog
+    OFD.Filter = "Ini-files |*.ini"
+    If OFD.ShowDialog(Me) = vbCancel Then Exit Sub
+    CreateIni OFD.FileName
+End Sub
+
+Private Sub CreateIni(FNm As String)
+Try: On Error GoTo Catch
+    Dim pfn As PathFileName
+    Set pfn = MNew.PathFileName(FNm)
     If Not pfn.Exists Then Exit Sub
     Set IniFile = MNew.ConfigIniDocument(pfn)
-    IniFile.Load
-    Text1.Text = IniFile.ToStr
+    UpdateView
+    Exit Sub
+Catch:
+    ErrHandler "CreateIni"
 End Sub
+
+'copy this same function to every class, form or module
+'the name of the class or form will be added automatically
+'in standard-modules the function "TypeName(Me)" will not work, so simply replace it with the name of the Module
+' v ############################## v '   Local ErrHandler   ' v ############################## v '
+Private Function ErrHandler(ByVal FuncName As String, _
+                            Optional ByVal AddInfo As String, _
+                            Optional WinApiError, _
+                            Optional bLoud As Boolean = True, _
+                            Optional bErrLog As Boolean = True, _
+                            Optional vbDecor As VbMsgBoxStyle = vbOKCancel, _
+                            Optional bRetry As Boolean) As VbMsgBoxResult
+
+    If bRetry Then
+
+        ErrHandler = MessErrorRetry(TypeName(Me), FuncName, AddInfo, WinApiError, bErrLog)
+
+    Else
+
+        ErrHandler = MessError(TypeName(Me), FuncName, AddInfo, WinApiError, bLoud, bErrLog, vbDecor)
+
+    End If
+
+End Function
+
+
