@@ -47,15 +47,15 @@ Private m_StrSave  As String 'Zwischenspeicher für den letzten Stand der IniDate
 Private m_TempKey  As ConfigIniKeyValue
 
 #If False Then
-    Value, PFN
+    Value , PFN
 #End If
 
 Private Sub Class_Initialize()
     Set m_Sections = MNew.List(vbObject, , True)
 End Sub
 
-Friend Sub New_(pfn As PathFileName)
-    Set m_PFN = pfn: m_PFName = m_PFN.Value
+Friend Sub New_(PFN As PathFileName)
+    Set m_PFN = PFN: m_PFName = m_PFN.Value
 End Sub
 'Copy to MNew:
 'Public Function ConfigIniDocument(PFN As PathFileName) As ConfigIniDocument
@@ -95,8 +95,8 @@ Public Property Get FileName() As String
     FileName = m_PFName
 End Property
 
-Public Property Get pfn() As PathFileName
-    Set pfn = m_PFN
+Public Property Get PFN() As PathFileName
+    Set PFN = m_PFN
 End Property
 
 Public Property Get IsLoaded() As Boolean
