@@ -7,7 +7,7 @@
 [![Follow](https://img.shields.io/github/followers/OlimilO1402.svg?style=social&label=Follow&maxAge=2592000)](https://github.com/OlimilO1402/Config_IniPrivateProfile/watchers) 
 
 Project started in spring 2008  
-These are 3 classes for writing and reading configuration files in the old ini-fileformat.  
+These are 3 classes for writing and reading configuration files in the fileformats *.ini, *.vbp and *.vbg
 * ConfigIniDocument 
 * ConfigIniSection 
 * ConfigIniKeyValue 
@@ -16,6 +16,13 @@ It supports Ansi, Unicode, VBC / VB6 / VBA, VBA6, VBA7 x86 and x64.
 For Unicode the file has to start either with a bom, or the first sectionname has to be in Unicode.  
 Use the class ConfigIniDocument to read and write ini-files immediately.  
 Or you load your settings from the ini file to ConfigIniDocument- ConfigIniSection- and ConfigIniKeyValue-objects, write your configuration values in memory and save it to disk later.  
-The class ConfigIniDocument also supports a first nameless root-section, like we have in visual basic 6 project-files (*.vbp).
+The class ConfigIniDocument also supports a first nameless root-section, like we have in visual basic 6 project-files (*.vbp).  
+Additionally to the code in this repos you need the following repos:  
+* Err_CorrectErrorHandling  
+* IO_PathFileName  
+* Ptr_Pointers  
+* Sys_Strings  
+* List_GenericNLinq  
+* Win_Dialogs  
 
 ![ConfigIni Image](Resources/ConfigIni.png "ConfigIni Image")

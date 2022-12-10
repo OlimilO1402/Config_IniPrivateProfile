@@ -15,12 +15,13 @@ Option Explicit 'Z:127(08.01.2008)
 Private m_IniFile  As ConfigIniDocument
 Private m_Section  As ConfigIniSection
 Private m_KeyName  As String
+Private m_hasEqual As Boolean
 Private m_HasValue As Boolean
 Private m_Value    As String
 Private m_Default  As Variant
 
 Private Sub Class_Initialize()
-    m_HasValue = True
+    'm_HasValue = False 'True
 End Sub
 
 Friend Sub New_(aIniFile As ConfigIniDocument, _
@@ -57,7 +58,7 @@ End Sub
 Friend Sub NewC(other As ConfigIniKeyValue)
     With other
         Set m_IniFile = .IniFile: Set m_Section = .Section
-            m_KeyName = .Name:       m_HasValue = .HasValue
+            m_KeyName = .Name:       m_HasValue = .HasValue: m_hasEqual = other.HasEqual
               m_Value = .Value:       m_Default = .Default
     End With
 End Sub
@@ -91,6 +92,13 @@ Public Property Get Name() As String
     Name = m_KeyName
 End Property
 
+Public Property Let HasEqual(ByVal aValue As Boolean)
+    m_hasEqual = aValue
+End Property
+Public Property Get HasEqual() As Boolean
+    HasEqual = m_hasEqual
+End Property
+
 Public Property Let HasValue(ByVal aValue As Boolean)
     m_HasValue = aValue
 End Property
@@ -104,6 +112,7 @@ Public Property Let Value(StrVal As String)
     End If
     m_Value = StrVal
     m_HasValue = True
+    m_hasEqual = True
 End Property
 Public Property Get Value() As String
     Value = m_Value
@@ -163,7 +172,27 @@ End Property
 '
 '##############################'  ToStr  '##############################'
 Public Function ToStr() As String
-    ToStr = m_KeyName
-    If m_HasValue Then ToStr = ToStr & "=" & m_Value
+    'there are 4 possibilities:
+    'we do not have a keyname, then we display nothing at all       -> ""
+    'we have a keyname, but we have no value und no equalsign       -> "Key"
+    'we have a keyname, but not a value, but we have equalsign      -> "Key="
+    'we have a keyname, we have a value, we must have equalsign too -> "Key=Value"
+    
+    'we have a keyname, but we decide not have a value, even if we had one,  '"keyname="
+    'now we also want to decide to show the equal or not
+    'we have a keyname, and we decide to have a value, so we must also have the equal-sign
+    Dim s As String: s = m_KeyName
+    If Len(s) Then
+        'only write a value if we also have a keyname, otherwise no value without a keyname
+        If m_HasValue Then
+            'we could switch on/off the value with the flag m_HasValue
+            s = s & "=" & m_Value
+        ElseIf m_hasEqual Then
+            'if we do not have a value we could also switch on/off the equal-sign
+            s = s & "="
+        End If
+    End If
+    ToStr = s
+    Debug.Print s
 End Function
 

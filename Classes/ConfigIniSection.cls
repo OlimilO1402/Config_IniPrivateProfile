@@ -37,6 +37,7 @@ Friend Sub NewC(other As ConfigIniSection)
     With other
         m_Name = .Name
         Set m_IniFile = .IniFile
+        'make a deep copy
         Set m_KeyValues = .KeyValues.Clone
     End With
 End Sub
@@ -46,6 +47,7 @@ Friend Function Clone() As ConfigIniSection
 End Function
 
 Public Sub Clear()
+    'clear only the keyvalue-list
     Class_Initialize
 End Sub
 
@@ -81,25 +83,13 @@ Public Function Filter(ByVal AllKeyName As String) As ConfigIniSection
         End If
     Next
 End Function
-'Public Function CloneKeys() As Collection
-'    Set CloneKeys = New Collection
-'    'jetzt auch alle ConfigIniKeyValues Clonen
-'    Dim aKey As ConfigIniKeyValue
-'    For Each aKey In mKeyCol
-'        Call CloneKeys.Add(aKey.Clone)
-'    Next
-'End Function
-'Public Property Set Key(IndexKey As Variant, aKeyVal As ConfigIniKeyValue)
-'  Set mKeyCol.Item(IndexKey) = aKeyVal
-'  Blödsinn das geht doch so überhaupt nicht
-'End Property
-Public Property Get keyvalue(IndexKey As Variant) As ConfigIniKeyValue
-    Set keyvalue = m_KeyValues.ItemByKey(CStr(IndexKey)) 'mKeyCol.Item(IndexKey)
-    If keyvalue Is Nothing Then
-        'in jedem Fall etwas zurückliefern, wenn nicht vorhanden dann anlegen
-        'ist das praktikabel? we will see, hehe
-        Set keyvalue = MNew.ConfigIniKeyValue(m_IniFile, Me, CStr(IndexKey), vbNullString)
-        m_KeyValues.Add keyvalue ', CStr(IndexKey))
+
+Public Property Get KeyValue(IndexKey As Variant) As ConfigIniKeyValue
+    Set KeyValue = m_KeyValues.ItemByKey(CStr(IndexKey))
+    If KeyValue Is Nothing Then
+        'return a KeyValue in every case, if it's not existing, then we create a new one
+        Set KeyValue = MNew.ConfigIniKeyValue(m_IniFile, Me, CStr(IndexKey), vbNullString)
+        m_KeyValues.Add KeyValue
     End If
 End Property
 
@@ -131,6 +121,11 @@ Public Function DeleteKeyValue(KeyName As String) As Boolean
 End Function
 
 Public Sub Load()
+    If Len(m_Name) Then LoadPrivProf Else LoadRoot
+End Sub
+
+Private Sub LoadPrivProf()
+Try: On Error GoTo Catch
     Dim nkey As ConfigIniKeyValue
     Dim KeyNames() As String
     Dim sKey As String, aKey As String
@@ -145,9 +140,8 @@ Public Sub Load()
             Set nkey = MNew.ConfigIniKeyValue(m_IniFile, Me, aKey, vbNullString)
             Dim kk As String
             If epos > 1 Then
-                'soll sich der key den Value selber nochmal holen?
-                'aber das doch doof, wenn der Value doch schon daliegt
-                'nkey.GetValue
+                'the key could get the value itself, but should it do so,
+                'nope since the value is already there
                 nkey.Value = Mid$(sKey, epos + 1)
                 kk = aKey
             Else
@@ -157,7 +151,66 @@ Public Sub Load()
             m_KeyValues.Add nkey ', kk
         End If
     Next
+    GoTo Finally
+Catch:
+    ErrHandler "LoadAsRoot"
+Finally:
 End Sub
+
+Private Sub LoadRoot()
+Try: On Error GoTo Catch
+    Dim pfn As PathFileName: Set pfn = m_IniFile.pfn
+    Dim line As String
+    Dim sKeyName As String, sValue As String, bEqualsign As Boolean, bLineIsSectionHeader As Boolean
+    Do
+        line = Trim(pfn.ReadLine)
+        If Len(line) Then
+            sKeyName = vbNullString: sValue = vbNullString: bEqualsign = False: bLineIsSectionHeader = False
+            If Not Line_TryParse(line, sKeyName, bEqualsign, sValue, bLineIsSectionHeader) Then
+                'there must be something wrong unexpectedly so exit if every case
+                GoTo Finally
+            Else
+                'exit if a section-header-name is detected "["
+                If bLineIsSectionHeader Then GoTo Finally
+                'don't use AddKeyValue here, because there can be more keys with the same name
+                Dim nkey As ConfigIniKeyValue: Set nkey = MNew.ConfigIniKeyValue(m_IniFile, Me, sKeyName)
+                If Len(sValue) Then
+                    nkey.Value = sValue
+                Else
+                    nkey.HasEqual = bEqualsign
+                End If
+                m_KeyValues.Add nkey
+            End If
+        End If
+    Loop Until pfn.IsEOF
+    GoTo Finally
+Catch:
+    ErrHandler "LoadAsRoot"
+Finally:
+    pfn.CloseFile
+End Sub
+
+Private Function Line_TryParse(line As String, keyname_out As String, hasEqualSign_out As Boolean, value_out As String, isSectionHeader_out As Boolean) As Boolean
+Try: On Error GoTo Catch
+    line = Trim(line)
+    If Left(line, 1) = "[" Then
+        isSectionHeader_out = True
+    Else
+        If InStr(1, line, "=") > 0 Then
+            hasEqualSign_out = True
+            Dim sa() As String: sa = Split(line, "=")
+            Dim u As Long: u = UBound(sa)
+            keyname_out = sa(0)
+            If u > 0 Then value_out = sa(1)
+        Else
+            keyname_out = line
+        End If
+    End If
+    Line_TryParse = True
+    Exit Function
+Catch:
+    ErrHandler "Line_TryParse", m_Name, keyname_out, value_out, "isSectionHeader: " & isSectionHeader_out
+End Function
 
 Public Function CountEntries() As Long
     CountEntries = m_IniFile.CountEntriesInSection(m_Name)
@@ -175,11 +228,11 @@ End Function
 Public Function ToStr() As String
     Dim s As String: s = Me.NameToStr
     If Len(s) Then s = s & vbCrLf
-    Dim keyvalue As ConfigIniKeyValue
+    Dim KeyValue As ConfigIniKeyValue
     Dim i As Long
     For i = 0 To m_KeyValues.Count - 1
-        Set keyvalue = m_KeyValues.Item(i)
-        s = s & keyvalue.ToStr & vbCrLf
+        Set KeyValue = m_KeyValues.Item(i)
+        s = s & KeyValue.ToStr & vbCrLf
     Next
     ToStr = s
 End Function
@@ -187,3 +240,53 @@ End Function
 Private Function GetIniSection(ByVal aSection As String, ByRef aRetBuff As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
     GetIniSection = GetPrivateProfileSectionW(StrPtr(aSection), StrPtr(aRetBuff), nSize, StrPtr(lpFileName))
 End Function
+
+' v #################### v '     Local ErrHandler      ' v #################### v '
+Private Function ErrHandler(ByVal FuncName As String, _
+                            Optional aSection As String, _
+                            Optional aKey As String, _
+                            Optional AddInfo1 As String, _
+                            Optional AddInfo2 As String, _
+                            Optional bLoud As Boolean = True, _
+                            Optional decor As VbMsgBoxStyle = vbOKCancel) As VbMsgBoxResult
+'So wenn ein Fehler hier in dieser Klasse auftritt,
+'dann wird er hoffentlich hier ankommen
+    Dim Info As String
+    If Len(aSection) Then _
+        Info = Info & "Section: " & aSection & vbCrLf
+    If Len(aKey) Then _
+        Info = Info & "Key:     " & aKey & vbCrLf
+    If Len(AddInfo1) Then _
+        Info = Info & "Info1:     " & AddInfo1 & vbCrLf
+    If Len(AddInfo2) Then _
+        Info = Info & "Info2:     " & AddInfo2 & vbCrLf
+    
+    If bLoud Then ErrHandler = ErrHandler2(FuncName, Info, , True, False, decor)
+
+End Function
+
+
+''copy this same function to every class, form or module
+''the name of the class or form will be added automatically
+''in standard-modules the function "TypeName(Me)" will not work, so simply replace it with the name of the Module
+'' v ############################## v '   Local ErrHandler   ' v ############################## v '
+Private Function ErrHandler2(ByVal FuncName As String, _
+                             Optional ByVal AddInfo As String, _
+                             Optional WinApiError, _
+                             Optional bLoud As Boolean = True, _
+                             Optional bErrLog As Boolean = True, _
+                             Optional vbDecor As VbMsgBoxStyle = vbOKCancel, _
+                             Optional bRetry As Boolean) As VbMsgBoxResult
+    
+    If bRetry Then
+        
+        ErrHandler2 = MessErrorRetry(TypeName(Me), FuncName, AddInfo, WinApiError, bErrLog)
+        
+    Else
+        
+        ErrHandler2 = MessError(TypeName(Me), FuncName, AddInfo, WinApiError, bLoud, bErrLog, vbDecor)
+        
+    End If
+    
+End Function
+

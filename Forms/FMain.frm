@@ -27,7 +27,7 @@ Begin VB.Form FMain
       OLEDropMode     =   1  'Manuell
       ScrollBars      =   3  'Beides
       TabIndex        =   12
-      ToolTipText     =   "Drag'n'drop *.ini- or *.vbp-files here"
+      ToolTipText     =   "Drag'n'drop *.ini- or *.vbp/vbg-files here"
       Top             =   1200
       Width           =   4935
    End
@@ -170,11 +170,11 @@ Private Sub UpdateView()
 Try: On Error GoTo Catch
     Text1.Text = vbNullString
     Text2.Text = vbNullString
-    Label1.Caption = IniFile.pfn.Value
-    Text1.Text = IniFile.pfn.ReadAllText
+    Label1.Caption = IniFile.PFN.Value
+    Text1.Text = IniFile.PFN.ReadAllText
     IniFile.Load
     Text2.Text = IniFile.ToStr
-    IniFile.pfn.CloseFile
+    IniFile.PFN.CloseFile
     Exit Sub
 Catch:
     ErrHandler "UpdateView"
@@ -201,8 +201,8 @@ End Sub
 Private Sub BtnTestReadAtOnce_Click()
     
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(App.Path & "\mynewini.ini"))
-    If Not IniFile.pfn.Exists Then
-        MsgBox "File not found!" & vbCrLf & IniFile.pfn.Value
+    If Not IniFile.PFN.Exists Then
+        MsgBox "File not found!" & vbCrLf & IniFile.PFN.Value
         Exit Sub
     End If
     Dim p As PosSizeF, rv As Long, txt As String
@@ -252,7 +252,7 @@ Private Sub BtnWriteIniFile_Click()
     Dim KeyValueName As String
     Dim Value        As String
     Dim Section  As ConfigIniSection
-    Dim keyvalue As ConfigIniKeyValue
+    Dim KeyValue As ConfigIniKeyValue
     
     SectionName = "TestReadWriteAtOnce"
     KeyValueName = "FirstEntry"
@@ -267,20 +267,20 @@ Private Sub BtnWriteIniFile_Click()
     Set Section = IniFile.AddSection(SectionName)
     
     KeyValueName = "FirstEntry"
-    Set keyvalue = Section.AddKeyValue(KeyValueName)
-    keyvalue.ValueInt = 123456
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
+    KeyValue.ValueInt = 123456
     
     KeyValueName = "SecondEntry"
-    Set keyvalue = Section.AddKeyValue(KeyValueName)
-    keyvalue.ValueInt = 456789
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
+    KeyValue.ValueInt = 456789
     
     'it's also possible to write UD-Type-variables at once:
     KeyValueName = "Form1PositionAndSize"
-    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
     
     Dim cs As PosSizeF: cs = MNew.PosSizeF(Me)
     Dim rv As Long
-    keyvalue.ValueStructP(LenB(cs), VarPtr(cs)) = VarPtr(cs)
+    KeyValue.ValueStructP(LenB(cs), VarPtr(cs)) = VarPtr(cs)
     
     Dim tt As TestTyp1
     With tt
@@ -293,16 +293,16 @@ Private Sub BtnWriteIniFile_Click()
     End With
     
     KeyValueName = "tt_As_TestTyp"
-    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
     
-    keyvalue.ValueStructP(LenB(tt), VarPtr(tt)) = VarPtr(tt)
+    KeyValue.ValueStructP(LenB(tt), VarPtr(tt)) = VarPtr(tt)
     
     'write a value yourself
     KeyValueName = "MyEntry"
-    Set keyvalue = Section.AddKeyValue(KeyValueName)
+    Set KeyValue = Section.AddKeyValue(KeyValueName)
     Value = InputBox("Write a value yourself: ", "Me too", "hoho")
     If Not (Len(Value) = 0) Then
-        keyvalue.ValueStr = Value
+        KeyValue.ValueStr = Value
     End If
     UpdateView
 End Sub
@@ -313,8 +313,8 @@ Private Sub BtnReadIniFile_Click()
     'Call IniFile.Load
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
     
-    If Not IniFile.pfn.Exists Then
-        If MsgBox("Inifile does not exist, write it first?" & vbCrLf & IniFile.pfn.Value, vbOKCancel) = vbCancel Then Exit Sub
+    If Not IniFile.PFN.Exists Then
+        If MsgBox("Inifile does not exist, write it first?" & vbCrLf & IniFile.PFN.Value, vbOKCancel) = vbCancel Then Exit Sub
         BtnWriteIniFile_Click
     End If
     If IniFile Is Nothing Then
@@ -328,8 +328,8 @@ End Sub
 Private Sub BtnWriteWindowPosSize_Click()
     
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini")): IniFile.Load
-    If Not IniFile.pfn.Exists Then
-        MsgBox "File not found, write it first!" & vbCrLf & IniFile.pfn.Value
+    If Not IniFile.PFN.Exists Then
+        MsgBox "File not found, write it first!" & vbCrLf & IniFile.PFN.Value
         Exit Sub
     End If
     Dim Section As ConfigIniSection:  Set Section = IniFile.Section("TestSection1")
@@ -345,19 +345,19 @@ End Sub
 Private Sub BtnSetWindowPosSize_Click()
     
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini")): IniFile.Load
-    If Not IniFile.pfn.Exists Then
-        MsgBox "File not found, write it first!" & vbCrLf & IniFile.pfn.Value
+    If Not IniFile.PFN.Exists Then
+        MsgBox "File not found, write it first!" & vbCrLf & IniFile.PFN.Value
         Exit Sub
     End If
     
     Dim Section As ConfigIniSection:  Set Section = IniFile.Section("TestSection1")
     
     Dim KeyName  As String: KeyName = "Form1PositionAndSize"
-    Dim keyvalue As ConfigIniKeyValue: Set keyvalue = Section.AddKeyValue(KeyName)
+    Dim KeyValue As ConfigIniKeyValue: Set KeyValue = Section.AddKeyValue(KeyName)
     
     Dim cs As PosSizeF
     
-    Dim rv As Long: rv = keyvalue.ValueStructP(LenB(cs), VarPtr(cs))
+    Dim rv As Long: rv = KeyValue.ValueStructP(LenB(cs), VarPtr(cs))
     
     With cs
         Me.WindowState = FormWindowStateConstants.vbNormal
@@ -367,20 +367,20 @@ End Sub
 
 Private Sub BtnReadRawIniData_Click()
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(Environ("Temp") & "\Test.ini"))
-    If Not IniFile.pfn.Exists Then
-        MsgBox "File not found, write it first!" & vbCrLf & IniFile.pfn.Value
+    If Not IniFile.PFN.Exists Then
+        MsgBox "File not found, write it first!" & vbCrLf & IniFile.PFN.Value
         Exit Sub
     End If
     UpdateView
 End Sub
 
 Private Sub BtnDeleteIniFile_Click()
-    If Not IniFile.pfn.Exists Then
-        MsgBox "File not found, nothing to delete here" & vbCrLf & IniFile.pfn.Value
+    If Not IniFile.PFN.Exists Then
+        MsgBox "File not found, nothing to delete here" & vbCrLf & IniFile.PFN.Value
         Exit Sub
     End If
 Try: On Error GoTo Catch
-    IniFile.pfn.Delete
+    IniFile.PFN.Delete
 Catch:
 End Sub
 
@@ -392,40 +392,104 @@ End Sub
 
 Sub TestVBP(sPfnVBP As String)
     Set IniFile = MNew.ConfigIniDocument(MNew.PathFileName(sPfnVBP))
-    If Not IniFile.pfn.Exists Then
-        MsgBox "File not found:" & vbCrLf & IniFile.pfn.Value
+    If Not IniFile.PFN.Exists Then
+        MsgBox "File not found:" & vbCrLf & IniFile.PFN.Value
         Exit Sub
     End If
-    IniFile.Load
+    
+    UpdateView
+    
     Dim i As Long, u As Long
     Dim s As String, cikv As ConfigIniKeyValue
     
-    Dim classes As ConfigIniSection: Set classes = IniFile.Root.Filter("Class")
-    u = classes.KeyValues.Count - 1
-    For i = 0 To u
-        Set cikv = classes.KeyValues.Item(i)
-        s = s & cikv.Value & vbCrLf
-    Next
+    Dim startupprojects As ConfigIniSection: Set startupprojects = IniFile.Root.Filter("StartupProject")
+    u = startupprojects.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "StartupProject:" & vbCrLf & "===============" & vbCrLf
+        For i = 0 To u
+            Set cikv = startupprojects.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
     
-    s = s & vbCrLf
+    Dim projects As ConfigIniSection: Set projects = IniFile.Root.Filter("Project")
+    u = projects.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "Projects:" & vbCrLf & "=========" & vbCrLf
+        For i = 0 To u
+            Set cikv = projects.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
     
-    Dim modules As ConfigIniSection: Set modules = IniFile.Root.Filter("Module")
-    u = modules.KeyValues.Count - 1
-    For i = 0 To u
-        Set cikv = modules.KeyValues.Item(i)
-        s = s & cikv.Value & vbCrLf
-    Next
-    
-    s = s & vbCrLf
+    Dim references As ConfigIniSection: Set references = IniFile.Root.Filter("Reference")
+    u = references.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "References:" & vbCrLf & "===========" & vbCrLf
+        For i = 0 To u
+            Set cikv = references.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
     
     Dim forms As ConfigIniSection: Set forms = IniFile.Root.Filter("Form")
     u = forms.KeyValues.Count - 1
-    For i = 0 To u
-        Set cikv = forms.KeyValues.Item(i)
-        s = s & cikv.Value & vbCrLf
-    Next
-    UpdateView
-    Text1.Text = Text1.Text & vbCrLf & "##############################" & vbCrLf & s
+    If 0 <= u Then
+        s = s & "Forms:" & vbCrLf & "======" & vbCrLf
+        For i = 0 To u
+            Set cikv = forms.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
+    
+    Dim classes As ConfigIniSection: Set classes = IniFile.Root.Filter("Class")
+    u = classes.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "Classes:" & vbCrLf & "========" & vbCrLf
+        For i = 0 To u
+            Set cikv = classes.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
+    
+    Dim modules As ConfigIniSection: Set modules = IniFile.Root.Filter("Module")
+    u = modules.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "Modules:" & vbCrLf & "========" & vbCrLf
+        For i = 0 To u
+            Set cikv = modules.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
+    
+    Dim userctrls As ConfigIniSection: Set userctrls = IniFile.Root.Filter("UserControl")
+    u = userctrls.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "UserControl:" & vbCrLf & "============" & vbCrLf
+        For i = 0 To u
+            Set cikv = userctrls.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
+    
+    Dim designers As ConfigIniSection: Set designers = IniFile.Root.Filter("Designer")
+    u = designers.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "Designer:" & vbCrLf & "=========" & vbCrLf
+        For i = 0 To u
+            Set cikv = designers.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+    End If
+    
+    Text2.Text = Text2.Text & vbCrLf & "##############################" & vbCrLf & s
 End Sub
 Private Sub Text1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
     TBOLEDragDrop Text1, Data, Effect, Button, Shift, X, Y
@@ -443,12 +507,14 @@ Sub TBOLEDragDrop(TB As TextBox, Data As DataObject, Effect As Long, Button As I
         MsgBox "String is not a valid filename"
         Exit Sub
     End If
-    Dim pfn As PathFileName: Set pfn = MNew.PathFileName(s)
-    Dim ext As String: ext = LCase(pfn.Extension)
+    Dim PFN As PathFileName: Set PFN = MNew.PathFileName(s)
+    Dim ext As String: ext = LCase(PFN.Extension)
     If ext = ".ini" Then
         CreateIni s
-    ElseIf ext = ".vbp" Then
+    ElseIf ext = ".vbp" Or ext = ".vbg" Then
         TestVBP s
+    Else
+        MsgBox "Sorry can't read file format: " & ext & "Just email me if you like me to implement this"
     End If
 End Sub
 
@@ -461,10 +527,10 @@ End Sub
 
 Private Sub CreateIni(FNm As String)
 Try: On Error GoTo Catch
-    Dim pfn As PathFileName
-    Set pfn = MNew.PathFileName(FNm)
-    If Not pfn.Exists Then Exit Sub
-    Set IniFile = MNew.ConfigIniDocument(pfn)
+    Dim PFN As PathFileName
+    Set PFN = MNew.PathFileName(FNm)
+    If Not PFN.Exists Then Exit Sub
+    Set IniFile = MNew.ConfigIniDocument(PFN)
     UpdateView
     Exit Sub
 Catch:

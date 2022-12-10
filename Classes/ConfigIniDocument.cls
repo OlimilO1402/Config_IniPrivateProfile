@@ -47,15 +47,15 @@ Private m_StrSave  As String 'Zwischenspeicher für den letzten Stand der IniDate
 Private m_TempKey  As ConfigIniKeyValue
 
 #If False Then
-    Value , PFN
+    Value , pfn
 #End If
 
 Private Sub Class_Initialize()
     Set m_Sections = MNew.List(vbObject, , True)
 End Sub
 
-Friend Sub New_(PFN As PathFileName)
-    Set m_PFN = PFN: m_PFName = m_PFN.Value
+Friend Sub New_(pfn As PathFileName)
+    Set m_PFN = pfn: m_PFName = m_PFN.Value
 End Sub
 'Copy to MNew:
 'Public Function ConfigIniDocument(PFN As PathFileName) As ConfigIniDocument
@@ -95,8 +95,8 @@ Public Property Get FileName() As String
     FileName = m_PFName
 End Property
 
-Public Property Get PFN() As PathFileName
-    Set PFN = m_PFN
+Public Property Get pfn() As PathFileName
+    Set pfn = m_PFN
 End Property
 
 Public Property Get IsLoaded() As Boolean
@@ -112,37 +112,52 @@ End Property
 
 Public Sub Load()
     'first load the root-section, this section is not a normal section, it is the 0-section because it has no name
+Try: On Error GoTo Catch
+    'OK die Root-section soll sich selber laden
+    'Dazu hat si alles was sie braucht denn Sections haben Zugriff auf Pathfilename über ConfigIniDocument
     Dim line As String
     line = Trim(m_PFN.ReadLine)
     If Left(line, 1) = "[" Then
         m_PFN.CloseFile
-        LoadNormalIni
-        Exit Sub
+        LoadPrivProfIni
+        'Exit Sub
+    Else
+        m_PFN.CloseFile
+        Set m_Root = MNew.ConfigIniSection(Me, vbNullString)
+        m_Root.Load
+        m_PFN.CloseFile
+        LoadPrivProfIni
     End If
-    Dim sa() As String
-    sa = Split(line, "=")
-    Dim cikv As ConfigIniKeyValue
-    Set m_Root = MNew.ConfigIniSection(Me, vbNullString)
-    Set cikv = m_Root.KeyValues.Add(MNew.ConfigIniKeyValue(Me, m_Root, sa(0)))
-    cikv.Value = sa(1)
-    Do While Not m_PFN.IsEOF
-        line = Trim(m_PFN.ReadLine)
-        If Len(line) Then
-            If Left(line, 1) = "[" Then
-                m_PFN.CloseFile
-                LoadNormalIni
-                Exit Sub
-            Else
-                sa = Split(line, "=")
-                Set cikv = m_Root.KeyValues.Add(MNew.ConfigIniKeyValue(Me, m_Root, sa(0)))
-                cikv.Value = sa(1)
-            End If
-        End If
-    Loop
+    
+'    Dim ssn As String, skn As String, sa() As String
+'    sa = Split(line, "=")
+'    Dim cikv As ConfigIniKeyValue
+'    Set m_Root = MNew.ConfigIniSection(Me, vbNullString): skn = sa(0)
+'    Set cikv = m_Root.KeyValues.Add(MNew.ConfigIniKeyValue(Me, m_Root, ssn))
+'    cikv.Value = sa(1)
+'    Do While Not m_PFN.IsEOF
+'        line = Trim(m_PFN.ReadLine)
+'        If Len(line) Then
+'            If Left(line, 1) = "[" Then
+'                m_PFN.CloseFile
+'                LoadNormalIni
+'                Exit Sub
+'            Else
+'                sa = Split(line, "=")
+'                skn = sa(0)
+'                Set cikv = m_Root.KeyValues.Add(MNew.ConfigIniKeyValue(Me, m_Root, skn))
+'                cikv.Value = sa(1)
+'            End If
+'        End If
+'    Loop
+    GoTo Finally
+Catch:
+    ErrHandler "Load", line
+Finally:
     m_PFN.CloseFile
 End Sub
 
-Private Sub LoadNormalIni()
+Private Sub LoadPrivProfIni()
 Try: On Error GoTo Catch
     Dim SectionArr() As String: GetIniArr SectionArr
     Call Clear
@@ -610,23 +625,23 @@ End Function
 ''in standard-modules the function "TypeName(Me)" will not work, so simply replace it with the name of the Module
 '' v ############################## v '   Local ErrHandler   ' v ############################## v '
 Private Function ErrHandler2(ByVal FuncName As String, _
-                            Optional ByVal AddInfo As String, _
-                            Optional WinApiError, _
-                            Optional bLoud As Boolean = True, _
-                            Optional bErrLog As Boolean = True, _
-                            Optional vbDecor As VbMsgBoxStyle = vbOKCancel, _
-                            Optional bRetry As Boolean) As VbMsgBoxResult
-
+                             Optional ByVal AddInfo As String, _
+                             Optional WinApiError, _
+                             Optional bLoud As Boolean = True, _
+                             Optional bErrLog As Boolean = True, _
+                             Optional vbDecor As VbMsgBoxStyle = vbOKCancel, _
+                             Optional bRetry As Boolean) As VbMsgBoxResult
+    
     If bRetry Then
-
+        
         ErrHandler2 = MessErrorRetry(TypeName(Me), FuncName, AddInfo, WinApiError, bErrLog)
-
+        
     Else
-
+        
         ErrHandler2 = MessError(TypeName(Me), FuncName, AddInfo, WinApiError, bLoud, bErrLog, vbDecor)
-
+        
     End If
-
+    
 End Function
 
 
