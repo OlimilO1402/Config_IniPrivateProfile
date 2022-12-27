@@ -3,8 +3,8 @@
 
 [![GitHub](https://img.shields.io/github/license/OlimilO1402/Config_IniPrivateProfile?style=plastic)](https://github.com/OlimilO1402/Config_IniPrivateProfile/blob/master/LICENSE) 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/OlimilO1402/Config_IniPrivateProfile?style=plastic)](https://github.com/OlimilO1402/Config_IniPrivateProfile/releases/latest) 
-[![Github All Releases](https://img.shields.io/github/downloads/OlimilO1402/Config_IniPrivateProfile/total.svg)](https://github.com/OlimilO1402/Config_IniPrivateProfile/releases/download/v22.12.10/ConfigIni_v22.12.10.zip) 
-[![Follow](https://img.shields.io/github/followers/OlimilO1402.svg?style=social&label=Follow&maxAge=2592000)](https://github.com/OlimilO1402/Config_IniPrivateProfile/watchers) 
+[![Github All Releases](https://img.shields.io/github/downloads/OlimilO1402/Config_IniPrivateProfile/total.svg)](https://github.com/OlimilO1402/Config_IniPrivateProfile/releases/download/v2022.12.27/ConfigIni_v2022.12.27.zip) 
+![GitHub followers](https://img.shields.io/github/followers/OlimilO1402?style=social)
 
 Project started in spring 2008  
 These are 3 classes for writing and reading configuration files in the fileformats *.ini, *.vbp and *.vbg
