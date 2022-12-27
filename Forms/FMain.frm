@@ -435,6 +435,17 @@ Sub TestVBP(sPfnVBP As String)
         s = s & vbCrLf
     End If
     
+    Dim objects As ConfigIniSection: Set objects = IniFile.Root.Filter("Object")
+    u = objects.KeyValues.Count - 1
+    If 0 <= u Then
+        s = s & "Objects:" & vbCrLf & "========" & vbCrLf
+        For i = 0 To u
+            Set cikv = objects.KeyValues.Item(i)
+            s = s & cikv.Value & vbCrLf
+        Next
+        s = s & vbCrLf
+    End If
+    
     Dim forms As ConfigIniSection: Set forms = IniFile.Root.Filter("Form")
     u = forms.KeyValues.Count - 1
     If 0 <= u Then
