@@ -92,6 +92,13 @@ Public Property Get Name() As String
     Name = m_KeyName
 End Property
 
+Public Property Let Key(ByVal aValue As String)
+    m_KeyName = aValue
+End Property
+Public Property Get Key() As String
+    Key = m_KeyName
+End Property
+
 Public Property Let HasEqual(ByVal aValue As Boolean)
     m_hasEqual = aValue
 End Property

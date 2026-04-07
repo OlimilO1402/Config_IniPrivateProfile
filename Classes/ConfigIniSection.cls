@@ -159,11 +159,11 @@ End Sub
 
 Private Sub LoadRoot()
 Try: On Error GoTo Catch
-    Dim pfn As PathFileName: Set pfn = m_IniFile.pfn
+    Dim PFN As PathFileName: Set PFN = m_IniFile.PFN
     Dim line As String
     Dim sKeyName As String, sValue As String, bEqualsign As Boolean, bLineIsSectionHeader As Boolean
     Do
-        line = Trim(pfn.ReadLine)
+        line = Trim(PFN.ReadLine)
         If Len(line) Then
             sKeyName = vbNullString: sValue = vbNullString: bEqualsign = False: bLineIsSectionHeader = False
             If Not Line_TryParse(line, sKeyName, bEqualsign, sValue, bLineIsSectionHeader) Then
@@ -182,15 +182,15 @@ Try: On Error GoTo Catch
                 m_KeyValues.Add nkey
             End If
         End If
-    Loop Until pfn.IsEOF
+    Loop Until PFN.IsEOF
     GoTo Finally
 Catch:
     ErrHandler "LoadAsRoot"
 Finally:
-    pfn.CloseFile
+    PFN.CloseFile
 End Sub
 
-Private Function Line_TryParse(line As String, keyname_out As String, hasEqualSign_out As Boolean, value_out As String, isSectionHeader_out As Boolean) As Boolean
+Private Function Line_TryParse(line As String, keyname_out As String, hasEqualSign_out As Boolean, Value_out As String, isSectionHeader_out As Boolean) As Boolean
 Try: On Error GoTo Catch
     line = Trim(line)
     If Left(line, 1) = "[" Then
@@ -201,7 +201,7 @@ Try: On Error GoTo Catch
             Dim sa() As String: sa = Split(line, "=")
             Dim u As Long: u = UBound(sa)
             keyname_out = sa(0)
-            If u > 0 Then value_out = sa(1)
+            If u > 0 Then Value_out = sa(1)
         Else
             keyname_out = line
         End If
@@ -209,7 +209,7 @@ Try: On Error GoTo Catch
     Line_TryParse = True
     Exit Function
 Catch:
-    ErrHandler "Line_TryParse", m_Name, keyname_out, value_out, "isSectionHeader: " & isSectionHeader_out
+    ErrHandler "Line_TryParse", m_Name, keyname_out, Value_out, "isSectionHeader: " & isSectionHeader_out
 End Function
 
 Public Function CountEntries() As Long

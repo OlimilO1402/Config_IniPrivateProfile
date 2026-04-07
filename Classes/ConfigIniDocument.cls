@@ -117,13 +117,19 @@ Try: On Error GoTo Catch
     'Dazu hat si alles was sie braucht denn Sections haben Zugriff auf Pathfilename über ConfigIniDocument
     Dim line As String
     line = Trim(m_PFN.ReadLine)
-    if line = ""
+    If Len(line) = 0 Then
+        Do
+            line = Trim(m_PFN.ReadLine)
+            If Len(line) Then Exit Do
+            If m_PFN.IsEOF Then Exit Do
+        Loop
+    End If
     If Left(line, 1) = "[" Then
         m_PFN.CloseFile
         LoadPrivProfIni
         'Exit Sub
     Else
-        m_PFN.CloseFile
+        m_PFN.CloseFile '???
         Set m_Root = MNew.ConfigIniSection(Me, vbNullString)
         m_Root.Load
         m_PFN.CloseFile

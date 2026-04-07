@@ -157,23 +157,23 @@ End Sub
 
 Private Sub Form_Resize()
     Dim L As Single
-    Dim T As Single: T = Text1.Top
+    Dim t As Single: t = Text1.Top
     Dim W As Single: W = Me.ScaleWidth
-    Dim H As Single: H = Me.ScaleHeight - T
+    Dim H As Single: H = Me.ScaleHeight - t
     If W > 0 And H > 0 Then
-        Text1.Move L, T, W / 2, H
-        Text2.Move W / 2, T, W / 2, H
+        Text1.Move L, t, W / 2, H
+        Text2.Move W / 2, t, W / 2, H
     End If
 End Sub
 
 Private Sub UpdateView()
 Try: On Error GoTo Catch
-    Text1.Text = vbNullString
-    Text2.Text = vbNullString
+    Text1.text = vbNullString
+    Text2.text = vbNullString
     Label1.Caption = IniFile.PFN.Value
-    Text1.Text = IniFile.PFN.ReadAllText
-    IniFile.Load
-    Text2.Text = IniFile.ToStr
+    Text1.text = IniFile.PFN.ReadAllText
+    'IniFile.Load ' maybe not in here but in sub testvbp
+    Text2.text = IniFile.ToStr
     IniFile.PFN.CloseFile
     Exit Sub
 Catch:
@@ -231,7 +231,7 @@ Private Sub BtnTestReadAtOnce_Click()
     Next
     
     UpdateView
-    Text1.Text = Text1.Text & txt
+    Text1.text = Text1.text & txt
     
 End Sub
 
@@ -386,7 +386,7 @@ End Sub
 
 Private Sub BtnTestVBP_Click()
     
-    TestVBP App.Path & "\PConfigIni.vbp"
+    TestVBP App.Path & "\PConfigIni_.vbp"
     
 End Sub
 
@@ -396,7 +396,7 @@ Sub TestVBP(sPfnVBP As String)
         MsgBox "File not found:" & vbCrLf & IniFile.PFN.Value
         Exit Sub
     End If
-    
+    IniFile.Load
     UpdateView
     
     Dim i As Long, u As Long
@@ -500,7 +500,7 @@ Sub TestVBP(sPfnVBP As String)
         Next
     End If
     
-    Text2.Text = Text2.Text & vbCrLf & "##############################" & vbCrLf & s
+    Text2.text = Text2.text & vbCrLf & "##############################" & vbCrLf & s
 End Sub
 Private Sub Text1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single)
     TBOLEDragDrop Text1, Data, Effect, Button, Shift, X, Y
