@@ -22,7 +22,7 @@ Private m_IniFile   As ConfigIniDocument
 Private m_KeyValues As List 'Of ConfigIniKeyValue
 
 Private Sub Class_Initialize()
-    Set m_KeyValues = MNew.List(vbObject)
+    Set m_KeyValues = MNew.List(EDataType.vbObject)
 End Sub
 
 Friend Sub New_(IniFile As ConfigIniDocument, ByVal SectionName As String)
@@ -33,8 +33,8 @@ End Sub
 '    Set ConfigIniSection = New ConfigIniSection: ConfigIniSection.New_ IniFile, SectionName
 'End Function
 
-Friend Sub NewC(other As ConfigIniSection)
-    With other
+Friend Sub NewC(Other As ConfigIniSection)
+    With Other
         m_Name = .Name
         Set m_IniFile = .IniFile
         'make a deep copy

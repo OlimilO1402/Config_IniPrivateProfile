@@ -51,7 +51,7 @@ Private m_TempKey  As ConfigIniKeyValue
 #End If
 
 Private Sub Class_Initialize()
-    Set m_Sections = MNew.List(vbObject, , True)
+    Set m_Sections = MNew.List(EDataType.vbObject, , True)
 End Sub
 
 Friend Sub New_(PFN As PathFileName)
@@ -62,8 +62,8 @@ End Sub
 '    Set ConfigIniDocument = New ConfigIniDocument: ConfigIniDocument.New_ PFN
 'End Function
 
-Friend Sub NewC(other As ConfigIniDocument)
-    With other
+Friend Sub NewC(Other As ConfigIniDocument)
+    With Other
         Me.FileName = .FileName: m_IsLoaded = .IsLoaded
         m_IsDirty = .IsDirty:    Set m_Root = .Root.Clone
         Set m_Sections = .Sections.Clone
@@ -75,7 +75,7 @@ Friend Function Clone() As ConfigIniDocument
 End Function
 
 Public Sub Clear()
-    Set m_Sections = MNew.List(vbObject, , True)  'IsHashed:=True
+    Set m_Sections = MNew.List(EDataType.vbObject, , True)  'IsHashed:=True
     m_IsLoaded = False 'set this here
     m_IsDirty = False
 End Sub
@@ -183,7 +183,7 @@ End Sub
 
 Public Sub Save()
 Try: On Error GoTo Catch
-    Dim asec As ConfigIniSection
+    Dim ASec As ConfigIniSection
     Dim aKey As ConfigIniKeyValue
     Dim i As Long, j As Long
     If m_IsDirty Then
@@ -196,9 +196,9 @@ Try: On Error GoTo Catch
             m_PFN.CloseFile
         End If
         For i = 0 To m_Sections.Count - 1
-            Set asec = m_Sections.Item(i)
-            For j = 0 To asec.KeyValues.Count - 1
-                Set aKey = asec.KeyValues.Item(j)
+            Set ASec = m_Sections.Item(i)
+            For j = 0 To ASec.KeyValues.Count - 1
+                Set aKey = ASec.KeyValues.Item(j)
                 aKey.Save
             Next
         Next
@@ -400,10 +400,10 @@ End Sub
 Public Sub DeleteKey(ByVal SectionName As String, ByVal KeyName As String)
 Try: On Error GoTo Catch
     PutIniStr SectionName, KeyName, vbNullString, m_PFName
-    Dim asec As ConfigIniSection
+    Dim ASec As ConfigIniSection
     If SectionExists(SectionName) Then
-        Set asec = m_Sections.Item(SectionName)
-        asec.DeleteKeyValue KeyName
+        Set ASec = m_Sections.Item(SectionName)
+        ASec.DeleteKeyValue KeyName
     End If
     Exit Sub
 Catch:
