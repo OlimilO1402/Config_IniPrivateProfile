@@ -74,7 +74,7 @@ Public Function ConfigIniDocument(aPFN As PathFileName) As ConfigIniDocument
     Set ConfigIniDocument = New ConfigIniDocument: ConfigIniDocument.New_ aPFN
 End Function
 
-Public Function ConfigIniSection(IniFile As ConfigIniDocument, ByVal SectionName As String, Optional IsHashed As Boolean = False) As ConfigIniSection
+Public Function ConfigIniSection(IniFile As ConfigIniDocument, ByVal SectionName As String, Optional ByVal IsHashed As Boolean = False) As ConfigIniSection
     Set ConfigIniSection = New ConfigIniSection: ConfigIniSection.New_ IniFile, SectionName, IsHashed
 End Function
 
